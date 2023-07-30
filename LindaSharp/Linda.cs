@@ -78,7 +78,7 @@ public class Linda : ILinda {
 		lock (this) {
 			var tupleUsed = false;
 
-			foreach (var waitingTuple in rdWaitingTuples) {
+			foreach (var waitingTuple in rdWaitingTuples.Reverse()) {
 				if (!IsTupleCompatible(waitingTuple.TuplePattern, tuple))
 					continue;
 
@@ -90,7 +90,7 @@ public class Linda : ILinda {
 
 			var tupleInputted = false;
 
-			foreach (var waitingTuple in inWaitingTuples) {
+			foreach (var waitingTuple in inWaitingTuples.Reverse()) {
 				if (!IsTupleCompatible(waitingTuple.TuplePattern, tuple))
 					continue;
 
