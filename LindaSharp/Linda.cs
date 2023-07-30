@@ -25,10 +25,10 @@ public class Linda : ILinda {
 	private readonly IList<WaitingTuple> waitingTuples = new List<WaitingTuple>();
 
 	private object[]? Find(object?[] tuplePattern) {
-		return tupleSpace.FirstOrDefault(tuple => CheckTupleCompatibility(tuplePattern, tuple));
+		return tupleSpace.FirstOrDefault(tuple => IsTupleCompatible(tuplePattern, tuple));
 	}
 
-	private static bool CheckTupleCompatibility(object?[] tuplePattern, object[] tuple) {
+	private static bool IsTupleCompatible(object?[] tuplePattern, object[] tuple) {
 		if (tuple.Length != tuplePattern.Length)
 			return false;
 
@@ -82,7 +82,7 @@ public class Linda : ILinda {
 			tupleSpace.Add(clonedTuple);
 
 			foreach (var waitingTuple in waitingTuples) {
-				if (CheckTupleCompatibility(waitingTuple.PatternTuple, clonedTuple)) {
+				if (IsTupleCompatible(waitingTuple.PatternTuple, clonedTuple)) {
 					waitingTuple.Tuple = clonedTuple;
 					waitingTuples.Remove(waitingTuple);
 
