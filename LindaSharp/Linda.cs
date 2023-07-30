@@ -22,11 +22,8 @@ public class Linda : ILinda {
 		}
 	}
 
-	private readonly IList<WaitingTuple> waitingTuples = new List<WaitingTuple>();
-
-	private object[]? Find(object?[] tuplePattern) {
-		return tupleSpace.FirstOrDefault(tuple => IsTupleCompatible(tuplePattern, tuple));
-	}
+	private readonly IList<WaitingTuple> inWaitingTuples = new List<WaitingTuple>();
+	private readonly IList<WaitingTuple> rdWaitingTuples = new List<WaitingTuple>();
 
 	private static bool IsTupleCompatible(object?[] tuplePattern, object[] tuple) {
 		if (tuple.Length != tuplePattern.Length)
@@ -40,30 +37,24 @@ public class Linda : ILinda {
 	}
 
 	private object[] WaitTuple(object?[] tuplePattern, bool removeFromSpace) {
-		object[]? foundedTuple;
 		lock (this) {
-			foundedTuple = Find(tuplePattern);
+			if (TryGetTuple(tuplePattern, removeFromSpace, out var foundedTuple))
+				return foundedTuple!;
 
-			if (foundedTuple is null) {
-				var waitingTuple = new WaitingTuple(tuplePattern);
-				waitingTuples.Add(waitingTuple);
+			var waitingTuple = new WaitingTuple(tuplePattern);
 
-				while (waitingTuple.Tuple is null)
-					Monitor.Wait(this);
+			(removeFromSpace ? inWaitingTuples : rdWaitingTuples).Add(waitingTuple);
 
-				foundedTuple = waitingTuple.Tuple;
-			}
+			while (waitingTuple.Tuple is null)
+				Monitor.Wait(this);
 
-			if (removeFromSpace)
-				tupleSpace.Remove(foundedTuple);
+			return waitingTuple.Tuple;
 		}
-
-		return foundedTuple;
 	}
 
 	private bool TryGetTuple(object?[] tuplePattern, bool removeFromSpace, out object[]? tuple) {
 		lock (this) {
-			tuple = Find(tuplePattern);
+			tuple = tupleSpace.FirstOrDefault(tuple => IsTupleCompatible(tuplePattern, tuple));
 
 			if (tuple is null)
 				return false;
@@ -77,20 +68,38 @@ public class Linda : ILinda {
 
 	public void Out(object[] tuple) {
 		lock (this) {
-			var clonedTuple = (object[])tuple.Clone();
+			var tupleUsed = false;
 
-			tupleSpace.Add(clonedTuple);
+			foreach (var waitingTuple in rdWaitingTuples) {
+				if (!IsTupleCompatible(waitingTuple.TuplePattern, tuple))
+					continue;
 
-			foreach (var waitingTuple in waitingTuples) {
-				if (IsTupleCompatible(waitingTuple.TuplePattern, clonedTuple)) {
-					waitingTuple.Tuple = clonedTuple;
-					waitingTuples.Remove(waitingTuple);
+				waitingTuple.Tuple = (object[])tuple.Clone();
+				rdWaitingTuples.Remove(waitingTuple);
 
-					Monitor.PulseAll(this);
-
-					break;
-				}
+				tupleUsed = true;
 			}
+
+			var tupleInputted = false;
+
+			foreach (var waitingTuple in inWaitingTuples) {
+				if (!IsTupleCompatible(waitingTuple.TuplePattern, tuple))
+					continue;
+
+				waitingTuple.Tuple = (object[])tuple.Clone();
+				inWaitingTuples.Remove(waitingTuple);
+
+				tupleUsed = true;
+				tupleInputted = true;
+
+				break;
+			}
+
+			if (!tupleInputted)
+				tupleSpace.Add((object[])tuple.Clone());
+
+			if (tupleUsed)
+				Monitor.PulseAll(this);
 		}
 	}
 
