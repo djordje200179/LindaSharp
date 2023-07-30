@@ -8,6 +8,9 @@ public interface ILinda {
 
 	public object[] Rd(object?[] tuplePattern);
 	public bool Rdp(object?[] tuplePattern, out object[]? tuple);
+
+	public void Eval(Action<ILinda> function);
+	public void Eval(Action<ILinda, object> function, object parameter);
 }
 
 public class Linda : ILinda {
@@ -117,5 +120,13 @@ public class Linda : ILinda {
 
 	public bool Rdp(object?[] tuplePattern, out object[]? tuple) {
 		return TryGetTuple(tuplePattern, false, out tuple);
+	}
+
+	public void Eval(Action<ILinda> function) {
+		new Thread(() => function(this)).Start();
+	}
+
+	public void Eval(Action<ILinda, object> function, object parameter) {
+		new Thread(() => function(this, parameter)).Start();
 	}
 }
