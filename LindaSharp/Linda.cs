@@ -1,6 +1,6 @@
 ﻿namespace LindaSharp;
 
-public interface ILinda {
+public interface ILinda : IDisposable {
 	public void Out(object[] tuple);
 
 	public object[] In(object?[] tuplePattern);
@@ -14,6 +14,7 @@ public interface ILinda {
 }
 
 public class Linda : ILinda {
+	private bool disposed = false;
     private readonly IList<object[]> tupleSpace = new List<object[]>();
 	
 	private class WaitingTuple {
@@ -48,8 +49,12 @@ public class Linda : ILinda {
 
 			(removeFromSpace ? inWaitingTuples : rdWaitingTuples).Add(waitingTuple);
 
-			while (waitingTuple.Tuple is null)
+			while (waitingTuple.Tuple is null) {
+				if (disposed)
+					throw new ObjectDisposedException(nameof(Linda));
+
 				Monitor.Wait(this);
+			}
 
 			return waitingTuple.Tuple;
 		}
@@ -128,5 +133,16 @@ public class Linda : ILinda {
 
 	public void Eval(Action<ILinda, object> function, object parameter) {
 		new Thread(() => function(this, parameter)).Start();
+	}
+
+	public void Dispose() {
+		if (disposed)
+			return;
+
+		disposed = true;
+		GC.SuppressFinalize(this);
+		lock (this) {
+			Monitor.PulseAll(this);
+		}
 	}
 }
