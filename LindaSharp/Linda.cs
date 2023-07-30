@@ -3,22 +3,22 @@
 public interface ILinda {
 	public void Out(object[] tuple);
 
-	public object[] In(object?[] patternTuple);
-	public bool Inp(object?[] patternTuple, out object[]? tuple);
+	public object[] In(object?[] tuplePattern);
+	public bool Inp(object?[] tuplePattern, out object[]? tuple);
 
-	public object[] Rd(object?[] patternTuple);
-	public bool Rdp(object?[] patternTuple, out object[]? tuple);
+	public object[] Rd(object?[] tuplePattern);
+	public bool Rdp(object?[] tuplePattern, out object[]? tuple);
 }
 
 public class Linda : ILinda {
     private readonly IList<object[]> tupleSpace = new List<object[]>();
 	
 	private class WaitingTuple {
-		public object?[] PatternTuple { get; }
+		public object?[] TuplePattern { get; }
 		public object[]? Tuple { get; set; } = null;
 
-		public WaitingTuple(object?[] patternTuple) {
-			PatternTuple = patternTuple;
+		public WaitingTuple(object?[] tuplePattern) {
+			TuplePattern = tuplePattern;
 		}
 	}
 
@@ -39,13 +39,13 @@ public class Linda : ILinda {
 		return true;
 	}
 
-	private object[] WaitTuple(object?[] patternTuple, bool removeFromSpace) {
+	private object[] WaitTuple(object?[] tuplePattern, bool removeFromSpace) {
 		object[]? foundedTuple;
 		lock (this) {
-			foundedTuple = Find(patternTuple);
+			foundedTuple = Find(tuplePattern);
 
 			if (foundedTuple is null) {
-				var waitingTuple = new WaitingTuple(patternTuple);
+				var waitingTuple = new WaitingTuple(tuplePattern);
 				waitingTuples.Add(waitingTuple);
 
 				while (waitingTuple.Tuple is null)
@@ -61,9 +61,9 @@ public class Linda : ILinda {
 		return foundedTuple;
 	}
 
-	private bool TryGetTuple(object?[] patternTuple, bool removeFromSpace, out object[]? tuple) {
+	private bool TryGetTuple(object?[] tuplePattern, bool removeFromSpace, out object[]? tuple) {
 		lock (this) {
-			tuple = Find(patternTuple);
+			tuple = Find(tuplePattern);
 
 			if (tuple is null)
 				return false;
@@ -82,7 +82,7 @@ public class Linda : ILinda {
 			tupleSpace.Add(clonedTuple);
 
 			foreach (var waitingTuple in waitingTuples) {
-				if (IsTupleCompatible(waitingTuple.PatternTuple, clonedTuple)) {
+				if (IsTupleCompatible(waitingTuple.TuplePattern, clonedTuple)) {
 					waitingTuple.Tuple = clonedTuple;
 					waitingTuples.Remove(waitingTuple);
 
@@ -94,19 +94,19 @@ public class Linda : ILinda {
 		}
 	}
 
-	public object[] In(object?[] patternTuple) {
-		return WaitTuple(patternTuple, true);
+	public object[] In(object?[] tuplePattern) {
+		return WaitTuple(tuplePattern, true);
 	}
 
-	public bool Inp(object?[] patternTuple, out object[]? tuple) {
-		return TryGetTuple(patternTuple, true, out tuple);
+	public bool Inp(object?[] tuplePattern, out object[]? tuple) {
+		return TryGetTuple(tuplePattern, true, out tuple);
 	}
 
-	public object[] Rd(object?[] patternTuple) {
-		return WaitTuple(patternTuple, false);
+	public object[] Rd(object?[] tuplePattern) {
+		return WaitTuple(tuplePattern, false);
 	}
 
-	public bool Rdp(object?[] patternTuple, out object[]? tuple) {
-		return TryGetTuple(patternTuple, false, out tuple);
+	public bool Rdp(object?[] tuplePattern, out object[]? tuple) {
+		return TryGetTuple(tuplePattern, false, out tuple);
 	}
 }
