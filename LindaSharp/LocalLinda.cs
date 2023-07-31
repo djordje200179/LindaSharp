@@ -1,4 +1,6 @@
-﻿namespace LindaSharp;
+﻿using System.Diagnostics.CodeAnalysis;
+
+namespace LindaSharp;
 public class LocalLinda : ILinda {
 	private bool disposed = false;
 	private readonly IList<object[]> tupleSpace = new List<object[]>();
@@ -46,7 +48,7 @@ public class LocalLinda : ILinda {
 		}
 	}
 
-	private bool TryGetTuple(object?[] tuplePattern, bool removeFromSpace, out object[]? tuple) {
+	private bool TryGetTuple(object?[] tuplePattern, bool removeFromSpace, [MaybeNullWhen(false)] out object[] tuple) {
 		lock (this) {
 			tuple = tupleSpace.FirstOrDefault(tuple => IsTupleCompatible(tuplePattern, tuple));
 
@@ -101,7 +103,7 @@ public class LocalLinda : ILinda {
 		return WaitTuple(tuplePattern, true);
 	}
 
-	public bool Inp(object?[] tuplePattern, out object[]? tuple) {
+	public bool Inp(object?[] tuplePattern, [MaybeNullWhen(false)] out object[] tuple) {
 		return TryGetTuple(tuplePattern, true, out tuple);
 	}
 
@@ -109,7 +111,7 @@ public class LocalLinda : ILinda {
 		return WaitTuple(tuplePattern, false);
 	}
 
-	public bool Rdp(object?[] tuplePattern, out object[]? tuple) {
+	public bool Rdp(object?[] tuplePattern, [MaybeNullWhen(false)] out object[] tuple) {
 		return TryGetTuple(tuplePattern, false, out tuple);
 	}
 
