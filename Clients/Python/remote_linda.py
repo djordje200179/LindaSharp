@@ -1,6 +1,11 @@
 import requests
 
 
+class ObjectDisposedException(Exception):
+    def __str__(self):
+        return "Server Linda was disposed"
+
+
 class RemoteLinda:
     def __init__(self, host: str, port: int):
         self.__base_url = f"http://{host}:{port}/"
@@ -10,7 +15,7 @@ class RemoteLinda:
         response = requests.request(http_method, url, json=data)
 
         if response.status_code == requests.codes.server_error:
-            raise Exception("Server Linda was disposed")
+            raise ObjectDisposedException()
 
         return response
 
