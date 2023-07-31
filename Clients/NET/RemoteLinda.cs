@@ -1,112 +1,94 @@
-﻿using System;
+﻿using LindaSharp.Server;
 using System.Diagnostics.CodeAnalysis;
 using System.Net;
 using System.Net.Http.Json;
+using System.Text.Json;
 
 namespace LindaSharp.Client;
 
 public class RemoteLinda : ILinda {
-	private readonly Uri url;
+	private readonly HttpClient httpClient;
+	private readonly CancellationTokenSource cancellationTokenSource = new();
 
-	private HttpClient CreateClient() {
-		return new() {
-			BaseAddress = url
+	public RemoteLinda(string host, ushort port) {
+		httpClient = new() {
+			BaseAddress = new Uri($"http://{host}:{port}"),
+			Timeout = Timeout.InfiniteTimeSpan
 		};
 	}
 
-	public RemoteLinda(string host, ushort port) {
-		url = new Uri($"http://{host}:{port}");
+	private HttpResponseMessage SendRequest(HttpRequestMessage request) {
+		using var requestTask = httpClient.SendAsync(request, cancellationTokenSource.Token);
+		requestTask.Wait();
+		var response = requestTask.Result;
+
+		if (response.StatusCode == HttpStatusCode.InternalServerError)
+			throw new ObjectDisposedException(nameof(ILinda));
+
+		return response;
+	}
+
+	private static object[] ReadTuple(HttpResponseMessage response) {
+		var deserializationOptions = new JsonSerializerOptions {
+			Converters = {
+				new TupleJsonDeserializer()
+			},
+			WriteIndented = true
+		};
+
+		var decodingTask = Task.Run(() => response.Content.ReadFromJsonAsync<object[]>(deserializationOptions));
+		decodingTask.Wait();
+		return decodingTask.Result!;
+	}
+
+	private object[] WaitTuple(object?[] tuplePattern, string method) {
+		var request = new HttpRequestMessage(HttpMethod.Get, method) {
+			Content = JsonContent.Create(tuplePattern)
+		};
+
+		using var response = SendRequest(request);
+
+		return ReadTuple(response);
+	}
+
+	private bool TryGetTuple(object?[] tuplePattern, string method, [MaybeNullWhen(false)] out object[] tuple) {
+		var request = new HttpRequestMessage(HttpMethod.Get, method) {
+			Content = JsonContent.Create(tuplePattern)
+		};
+
+		using var response = SendRequest(request);
+
+		if (response.StatusCode == HttpStatusCode.NotFound) {
+			tuple = null;
+			return false;
+		} else {
+			tuple = ReadTuple(response);
+			return true;
+		}
 	}
 
 	public void Out(object[] tuple) {
-		var client = CreateClient();
-
 		var request = new HttpRequestMessage(HttpMethod.Post, "out") {
 			Content = JsonContent.Create(tuple)
 		};
 
-		using var response = client.Send(request);
-
-		if (response.StatusCode == HttpStatusCode.InternalServerError)
-			throw new ObjectDisposedException(nameof(ILinda));
+		using var response = SendRequest(request);
 	}
 
 	public object[] In(object?[] tuplePattern) {
-		var client = CreateClient();
-
-		var request = new HttpRequestMessage(HttpMethod.Get, "in") {
-			Content = JsonContent.Create(tuplePattern)
-		};
-
-		using var response = client.Send(request);
-
-		if (response.StatusCode == HttpStatusCode.InternalServerError)
-			throw new ObjectDisposedException(nameof(ILinda));
-
-		var decodingTask = Task.Run(() => response.Content.ReadFromJsonAsync<object[]>());
-		decodingTask.Wait();
-		return decodingTask.Result!;
+		return WaitTuple(tuplePattern, "in");
 	}
 
 	public bool Inp(object?[] tuplePattern, [MaybeNullWhen(false)] out object[] tuple) {
-		var client = CreateClient();
-
-		var request = new HttpRequestMessage(HttpMethod.Get, "inp") {
-			Content = JsonContent.Create(tuplePattern)
-		};
-
-		using var response = client.Send(request);
-
-		if (response.StatusCode == HttpStatusCode.InternalServerError)
-			throw new ObjectDisposedException(nameof(ILinda));
-		else if (response.StatusCode == HttpStatusCode.NotFound) {
-			tuple = null;
-			return false;
-		}
-
-		var decodingTask = Task.Run(() => response.Content.ReadFromJsonAsync<object[]>());
-		decodingTask.Wait();
-		tuple = decodingTask.Result!;
-		return true;
+		return TryGetTuple(tuplePattern, "inp", out tuple);
 	}
 
 	public object[] Rd(object?[] tuplePattern) {
-		var client = CreateClient();
-
-		var request = new HttpRequestMessage(HttpMethod.Get, "rd") {
-			Content = JsonContent.Create(tuplePattern)
-		};
-
-		using var response = client.Send(request);
-
-		if (response.StatusCode == HttpStatusCode.InternalServerError)
-			throw new ObjectDisposedException(nameof(ILinda));
-
-		var decodingTask = Task.Run(() => response.Content.ReadFromJsonAsync<object[]>());
-		decodingTask.Wait();
-		return decodingTask.Result!;
+		return WaitTuple(tuplePattern, "rd");
 	}
 
 	public bool Rdp(object?[] tuplePattern, [MaybeNullWhen(false)] out object[] tuple) {
-		var client = CreateClient();
-
-		var request = new HttpRequestMessage(HttpMethod.Get, "rdp") {
-			Content = JsonContent.Create(tuplePattern)
-		};
-
-		using var response = client.Send(request);
-
-		if (response.StatusCode == HttpStatusCode.InternalServerError)
-			throw new ObjectDisposedException(nameof(ILinda));
-		else if (response.StatusCode == HttpStatusCode.NotFound) {
-			tuple = null;
-			return false;
-		}
-
-		var decodingTask = Task.Run(() => response.Content.ReadFromJsonAsync<object[]>());
-		decodingTask.Wait();
-		tuple = decodingTask.Result!;
-		return true;
+		return TryGetTuple(tuplePattern, "rdp", out tuple);
 	}
 
 	public void Eval(Action<ILinda> function) {
@@ -118,6 +100,10 @@ public class RemoteLinda : ILinda {
 	}
 
 	public void Dispose() {
-		throw new NotImplementedException();
+		GC.SuppressFinalize(this);
+
+		cancellationTokenSource.Cancel();
+		cancellationTokenSource.Dispose();
+		httpClient.Dispose();
 	}
 }
