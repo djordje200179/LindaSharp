@@ -1,4 +1,4 @@
-﻿namespace LindaSharp.Remote.Server;
+﻿namespace LindaSharp.Server;
 
 public class ComparableDictionary : Dictionary<string, object?> {
 	public override bool Equals(object? other) {

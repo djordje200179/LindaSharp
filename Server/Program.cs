@@ -1,5 +1,5 @@
 using LindaSharp;
-using LindaSharp.Remote.Server;
+using LindaSharp.Server;
 using JSON = Microsoft.AspNetCore.Http.Json;
 using Microsoft.AspNetCore.Mvc;
 

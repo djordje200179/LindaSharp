@@ -5,12 +5,4 @@
 		<ImplicitUsings>enable</ImplicitUsings>
 		<Nullable>enable</Nullable>
 	</PropertyGroup>
-
-	<ItemGroup>
-	  <None Remove="Linda.proto" />
-	</ItemGroup>
-
-	<ItemGroup>
-	  <Protobuf Include="Linda.proto" />
-	</ItemGroup>
 </Project>

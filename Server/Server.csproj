@@ -4,11 +4,11 @@
     <TargetFramework>net7.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
-    <RootNamespace>LindaSharp.Remote.$(MSBuildProjectName.Replace(" ", "_"))</RootNamespace>
+    <RootNamespace>LindaSharp.$(MSBuildProjectName.Replace(" ", "_"))</RootNamespace>
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\LindaSharp\LindaSharp.csproj" />
+    <ProjectReference Include="..\\Local\Local.csproj" />
   </ItemGroup>
 
 </Project>

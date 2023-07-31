@@ -1,14 +1,14 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <OutputType>Exe</OutputType>
     <TargetFramework>net7.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
-    <AssemblyName>LindaSharp.$(MSBuildProjectName)</AssemblyName>
+    <RootNamespace>LindaSharp.$(MSBuildProjectName.Replace(" ", "_"))</RootNamespace>
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Clients\NET\Client.csproj" />
+    <ProjectReference Include="..\..\Local\Local.csproj" />
   </ItemGroup>
+
 </Project>
