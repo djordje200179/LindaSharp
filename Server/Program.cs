@@ -67,4 +67,8 @@ app.MapGet("/rdp", ([FromBody] object?[] tuplePattern) => {
 	}
 });
 
+app.MapPost("/eval", ([FromBody] Action<ILinda> function) => {
+	throw new NotImplementedException();
+});
+
 app.Run();
