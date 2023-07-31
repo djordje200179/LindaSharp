@@ -18,9 +18,14 @@ public class RemoteLinda : ILinda {
 	}
 
 	private HttpResponseMessage SendRequest(HttpRequestMessage request) {
-		using var requestTask = httpClient.SendAsync(request, cancellationTokenSource.Token);
-		requestTask.Wait();
-		var response = requestTask.Result;
+		HttpResponseMessage response;
+		try {
+			using var requestTask = httpClient.SendAsync(request, cancellationTokenSource.Token);
+			requestTask.Wait();
+			response = requestTask.Result;
+		} catch (TaskCanceledException) {
+			throw new ObjectDisposedException(nameof(RemoteLinda));
+		}
 
 		if (response.StatusCode == HttpStatusCode.InternalServerError)
 			throw new ObjectDisposedException(nameof(ILinda));
