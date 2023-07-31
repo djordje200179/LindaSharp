@@ -9,6 +9,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Clients\NET\Client.csproj" />
+    <ProjectReference Include="..\Clients\NET\NETClient.csproj" />
   </ItemGroup>
 </Project>
