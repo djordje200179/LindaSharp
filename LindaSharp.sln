@@ -3,9 +3,13 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.6.33815.320
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Test", "Test\Test.csproj", "{6AD3809D-1B73-4CCF-BA78-A59BE770B2B5}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Test", "Test\Test.csproj", "{6AD3809D-1B73-4CCF-BA78-A59BE770B2B5}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "LindaSharp", "LindaSharp\LindaSharp.csproj", "{B3978914-BF74-4132-9D85-131A37F8E9F3}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Remote", "Remote", "{D21D9FEE-76C4-41EF-80E7-D55D4D0A0FB5}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Server", "Remote\Server\Server.csproj", "{91EA4077-7D1A-44B9-B149-B5BFDE32FDA2}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -21,9 +25,16 @@ Global
 		{B3978914-BF74-4132-9D85-131A37F8E9F3}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{B3978914-BF74-4132-9D85-131A37F8E9F3}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{B3978914-BF74-4132-9D85-131A37F8E9F3}.Release|Any CPU.Build.0 = Release|Any CPU
+		{91EA4077-7D1A-44B9-B149-B5BFDE32FDA2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{91EA4077-7D1A-44B9-B149-B5BFDE32FDA2}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{91EA4077-7D1A-44B9-B149-B5BFDE32FDA2}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{91EA4077-7D1A-44B9-B149-B5BFDE32FDA2}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{91EA4077-7D1A-44B9-B149-B5BFDE32FDA2} = {D21D9FEE-76C4-41EF-80E7-D55D4D0A0FB5}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {E70D6D0E-E0F3-4ECC-AF7D-0A9B8434FAD0}

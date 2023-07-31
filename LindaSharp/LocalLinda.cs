@@ -1,22 +1,8 @@
 ﻿namespace LindaSharp;
-
-public interface ILinda : IDisposable {
-	public void Out(object[] tuple);
-
-	public object[] In(object?[] tuplePattern);
-	public bool Inp(object?[] tuplePattern, out object[]? tuple);
-
-	public object[] Rd(object?[] tuplePattern);
-	public bool Rdp(object?[] tuplePattern, out object[]? tuple);
-
-	public void Eval(Action<ILinda> function);
-	public void Eval(Action<ILinda, object> function, object parameter);
-}
-
-public class Linda : ILinda {
+public class LocalLinda : ILinda {
 	private bool disposed = false;
-    private readonly IList<object[]> tupleSpace = new List<object[]>();
-	
+	private readonly IList<object[]> tupleSpace = new List<object[]>();
+
 	private class WaitingTuple {
 		public object?[] TuplePattern { get; }
 		public object[]? Tuple { get; set; } = null;
@@ -51,7 +37,7 @@ public class Linda : ILinda {
 
 			while (waitingTuple.Tuple is null) {
 				if (disposed)
-					throw new ObjectDisposedException(nameof(Linda));
+					throw new ObjectDisposedException(nameof(LocalLinda));
 
 				Monitor.Wait(this);
 			}
