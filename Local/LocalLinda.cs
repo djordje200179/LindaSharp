@@ -134,6 +134,15 @@ public class LocalLinda : ILinda {
 		}).Start();
 	}
 
+	public void EvalFile(string pythonCodePath) {
+		new Thread(() => {
+			var scope = pythonEngine.CreateScope();
+			scope.SetVariable("linda", this);
+
+			pythonEngine.ExecuteFile(pythonCodePath, scope);
+		}).Start();
+	}
+
 	public void Dispose() {
 		if (disposed)
 			return;

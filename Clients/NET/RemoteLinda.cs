@@ -108,6 +108,12 @@ public class RemoteLinda : ILinda {
 		using var response = SendRequest(request);
 	}
 
+	public void EvalFile(string pythonCodePath) {
+		var fileContent = File.ReadAllText(pythonCodePath);
+
+		Eval(fileContent);
+	}
+
 	public void Dispose() {
 		GC.SuppressFinalize(this);
 

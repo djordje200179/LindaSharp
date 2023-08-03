@@ -9,6 +9,16 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="FibonachiCalculation.pyi" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="FibonachiCalculation.pyi">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\Clients\NET\NETClient.csproj" />
   </ItemGroup>
 </Project>
