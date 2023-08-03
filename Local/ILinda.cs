@@ -11,6 +11,5 @@ public interface ILinda : IDisposable {
 	public object[] Rd(object?[] tuplePattern);
 	public bool Rdp(object?[] tuplePattern, [MaybeNullWhen(false)] out object[] tuple);
 
-	public void Eval(Action<ILinda> function);
-	public void Eval(Action<ILinda, object> function, object parameter);
+	public void Eval(string pythonCode);
 }

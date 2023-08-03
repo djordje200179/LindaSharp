@@ -100,8 +100,12 @@ public class RemoteLinda : ILinda {
 		throw new NotImplementedException();
 	}
 
-	public void Eval(Action<ILinda, object> function, object parameter) {
-		throw new NotImplementedException();
+	public void Eval(string pythonCode) {
+		var request = new HttpRequestMessage(HttpMethod.Post, "eval") {
+			Content = JsonContent.Create(pythonCode)
+		};
+
+		using var response = SendRequest(request);
 	}
 
 	public void Dispose() {

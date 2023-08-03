@@ -1,8 +1,12 @@
 ﻿using System.Diagnostics.CodeAnalysis;
+using IronPython.Hosting;
+using Microsoft.Scripting.Hosting;
 
 namespace LindaSharp;
-public class LocalLinda : ILinda {
+
+public class LocalLinda : ILinda { 
 	private bool disposed = false;
+
 	private readonly IList<object[]> tupleSpace = new List<object[]>();
 
 	private class WaitingTuple {
@@ -16,6 +20,8 @@ public class LocalLinda : ILinda {
 
 	private readonly IList<WaitingTuple> inWaitingTuples = new List<WaitingTuple>();
 	private readonly IList<WaitingTuple> rdWaitingTuples = new List<WaitingTuple>();
+
+	private readonly ScriptEngine pythonEngine = Python.CreateEngine();
 
 	private static bool IsTupleCompatible(object?[] tuplePattern, object[] tuple) {
 		if (tuple.Length != tuplePattern.Length)
@@ -119,8 +125,13 @@ public class LocalLinda : ILinda {
 		new Thread(() => function(this)).Start();
 	}
 
-	public void Eval(Action<ILinda, object> function, object parameter) {
-		new Thread(() => function(this, parameter)).Start();
+	public void Eval(string pythonCode) { 
+		new Thread(() => {
+			var scope = pythonEngine.CreateScope();
+			scope.SetVariable("linda", this);
+
+			pythonEngine.Execute(pythonCode, scope);
+		}).Start();
 	}
 
 	public void Dispose() {
