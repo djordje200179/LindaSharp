@@ -97,9 +97,33 @@ public class RemoteLinda : ILinda {
 		return TryGetTuple(tuplePattern, "rdp", out tuple);
 	}
 
-	public void Eval(Action<ILinda> function) {
-		throw new NotImplementedException();
+	public void EvalRegister(string key, string pythonCode) {
+		var url = $"eval/{key}";
+
+		var request = new HttpRequestMessage(HttpMethod.Put, url) {
+			Content = new StringContent(pythonCode, MediaTypeHeaderValue.Parse("text/ironpython"))
+		};
+
+		using var response = SendRequest(request);
+		response.EnsureSuccessStatusCode();
 	}
+
+	public void EvalRegisterFile(string key, string pythonFilePath) {
+		var content = File.ReadAllText(pythonFilePath);
+		EvalRegister(key, content);
+	}
+
+	public void EvalInvoke(string key, object? parameter = null) {
+		var url = $"eval/{key}";
+
+		var request = new HttpRequestMessage(HttpMethod.Post, url) {
+			Content = JsonContent.Create(parameter)
+		};
+
+		using var response = SendRequest(request);
+		response.EnsureSuccessStatusCode();
+	}
+
 
 	public void Eval(string pythonCode) {
 		var request = new HttpRequestMessage(HttpMethod.Post, "eval") {
@@ -107,12 +131,12 @@ public class RemoteLinda : ILinda {
 		};
 
 		using var response = SendRequest(request);
+		response.EnsureSuccessStatusCode();
 	}
 
-	public void EvalFile(string pythonCodePath) {
-		var fileContent = File.ReadAllText(pythonCodePath);
-
-		Eval(fileContent);
+	public void EvalFile(string pythonFilePath) {
+		var content = File.ReadAllText(pythonFilePath);
+		Eval(content);
 	}
 
 	public void Dispose() {

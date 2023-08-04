@@ -16,4 +16,4 @@ linda.Out(('b', c))
 if iteration != 9:
 	linda.Out(('iteration', iteration))
 else:
-	linda.Out(('done'))
+	linda.Out(('done',))

@@ -4,7 +4,7 @@ using Microsoft.Scripting.Hosting;
 
 namespace LindaSharp;
 
-public class LocalLinda : ILinda { 
+public class LocalLinda : ILinda {
 	private bool disposed = false;
 
 	private readonly IList<object[]> tupleSpace = new List<object[]>();
@@ -22,6 +22,7 @@ public class LocalLinda : ILinda {
 	private readonly IList<WaitingTuple> rdWaitingTuples = new List<WaitingTuple>();
 
 	private readonly ScriptEngine pythonEngine = Python.CreateEngine();
+	private readonly IDictionary<string, string> evalScripts = new Dictionary<string, string>();
 
 	private static bool IsTupleCompatible(object?[] tuplePattern, object[] tuple) {
 		if (tuple.Length != tuplePattern.Length)
@@ -125,22 +126,40 @@ public class LocalLinda : ILinda {
 		new Thread(() => function(this)).Start();
 	}
 
-	public void Eval(string pythonCode) { 
-		new Thread(() => {
-			var scope = pythonEngine.CreateScope();
-			scope.SetVariable("linda", this);
-
-			pythonEngine.Execute(pythonCode, scope);
-		}).Start();
+	public void EvalRegister(string key, string pythonCode) {
+		evalScripts[key] = pythonCode;
 	}
 
-	public void EvalFile(string pythonCodePath) {
-		new Thread(() => {
-			var scope = pythonEngine.CreateScope();
-			scope.SetVariable("linda", this);
+	public void EvalRegisterFile(string key, string pythonFilePath) {
+		var content = File.ReadAllText(pythonFilePath);
+		EvalRegister(key, content);
+	}
 
-			pythonEngine.ExecuteFile(pythonCodePath, scope);
-		}).Start();
+	public void EvalInvoke(string key, object? parameter = null) {
+		var script = evalScripts[key];
+
+		var scope = pythonEngine.CreateScope();
+		scope.SetVariable("linda", this);
+		scope.SetVariable("param", parameter);
+
+		var thread = new Thread(() => pythonEngine.Execute(script, scope));
+		thread.Start();
+	}
+
+	public void Eval(string pythonCode) {
+		var scope = pythonEngine.CreateScope();
+		scope.SetVariable("linda", this);
+
+		var thread = new Thread(() => pythonEngine.Execute(pythonCode, scope));
+		thread.Start();
+	}
+
+	public void EvalFile(string pythonFilePath) {
+		var scope = pythonEngine.CreateScope();
+		scope.SetVariable("linda", this);
+
+		var thread = new Thread(() => pythonEngine.ExecuteFile(pythonFilePath, scope));
+		thread.Start();
 	}
 
 	public void Dispose() {

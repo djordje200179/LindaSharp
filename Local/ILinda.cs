@@ -11,6 +11,17 @@ public interface ILinda : IDisposable {
 	public object[] Rd(object?[] tuplePattern);
 	public bool Rdp(object?[] tuplePattern, [MaybeNullWhen(false)] out object[] tuple);
 
+	public void EvalRegister(string key, string pythonCode);
+	public void EvalRegisterFile(string key, string pythonFilePath) {
+		var content = File.ReadAllText(pythonFilePath);
+		EvalRegister(key, content);
+	}
+
+	public void EvalInvoke(string key, object? parameter = null);
+
 	public void Eval(string pythonCode);
-	public void EvalFile(string pythonCodePath);
+	public void EvalFile(string pythonFilePath) {
+		var content = File.ReadAllText(pythonFilePath);
+		Eval(content);
+	}
 }

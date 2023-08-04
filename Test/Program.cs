@@ -8,8 +8,10 @@ remoteClient.Out(new object[] { "a", 0 });
 remoteClient.Out(new object[] { "b", 1 });
 remoteClient.Out(new object[] { "iteration", 1 });
 
+remoteClient.EvalRegisterFile("fib-calc", "FibonachiCalculation.pyi");
+
 for (var i = 0; i < 8; i++)
-	remoteClient.EvalFile("FibonachiCalculation.pyi");
+	remoteClient.EvalInvoke("fib-calc");
 
 remoteClient.In(new object?[] { "done" });
 

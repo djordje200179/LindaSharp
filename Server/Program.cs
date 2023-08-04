@@ -80,7 +80,37 @@ app.MapPost("/eval", (HttpRequest request) => {
 	var codeReadingTask = reader.ReadToEndAsync();
 	codeReadingTask.Wait();
 	var pythonCode = codeReadingTask.Result;
+
 	linda.Eval(pythonCode);
+
+	return Results.Ok();
+});
+
+app.MapPut("/eval/{key}", (HttpRequest request, string key) => {
+	StreamReader reader;
+	if (request.ContentType == "text/ironpython")
+		reader = new StreamReader(request.Body);
+	else if (request.Form.Files.Count == 1) {
+		var file = request.Form.Files[0];
+		reader = new StreamReader(file.OpenReadStream());
+	} else
+		return Results.StatusCode((int)HttpStatusCode.UnsupportedMediaType);
+
+	var codeReadingTask = reader.ReadToEndAsync();
+	codeReadingTask.Wait();
+	var pythonCode = codeReadingTask.Result;
+
+	linda.EvalRegister(key, pythonCode);
+
+	return Results.Ok();
+});
+
+app.MapPost("/eval/{key}", (HttpRequest request, string key, [FromBody] object? parameter) => {
+	try {
+		linda.EvalInvoke(key, parameter);
+	} catch (KeyNotFoundException) {
+		return Results.NotFound();
+	}
 
 	return Results.Ok();
 });
