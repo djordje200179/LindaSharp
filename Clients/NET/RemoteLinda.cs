@@ -1,6 +1,7 @@
 ﻿using LindaSharp.Server;
 using System.Diagnostics.CodeAnalysis;
 using System.Net;
+using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Text.Json;
 
@@ -102,7 +103,7 @@ public class RemoteLinda : ILinda {
 
 	public void Eval(string pythonCode) {
 		var request = new HttpRequestMessage(HttpMethod.Post, "eval") {
-			Content = JsonContent.Create(pythonCode)
+			Content = new StringContent(pythonCode, MediaTypeHeaderValue.Parse("text/ironpython"))
 		};
 
 		using var response = SendRequest(request);

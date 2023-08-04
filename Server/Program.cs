@@ -67,8 +67,22 @@ app.MapGet("/rdp", ([FromBody] object?[] tuplePattern) => {
 	}
 });
 
-app.MapPost("/eval", ([FromBody] string pythonCode) => {
+app.MapPost("/eval", (HttpRequest request) => {
+	StreamReader reader;
+	if (request.ContentType == "text/ironpython")
+		reader = new StreamReader(request.Body);
+	else if (request.Form.Files.Count == 1) {
+		var file = request.Form.Files[0];
+		reader = new StreamReader(file.OpenReadStream());
+	} else
+		return Results.StatusCode((int)HttpStatusCode.UnsupportedMediaType);
+
+	var codeReadingTask = reader.ReadToEndAsync();
+	codeReadingTask.Wait();
+	var pythonCode = codeReadingTask.Result;
 	linda.Eval(pythonCode);
+
+	return Results.Ok();
 });
 
 app.Run();
