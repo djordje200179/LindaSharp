@@ -1,4 +1,5 @@
-﻿using System.Text.Json;
+﻿using System.Numerics;
+using System.Text.Json;
 using System.Text.Json.Serialization;
 
 namespace LindaSharp.Server;
@@ -15,14 +16,14 @@ public class TupleJsonDeserializer : JsonConverter<object?> {
 		case JsonTokenType.String:
 			return reader.GetString();
 		case JsonTokenType.Number: {
-			if (reader.TryGetInt64(out var integerNumber))
+			using var doc = JsonDocument.ParseValue(ref reader);
+
+			if (BigInteger.TryParse(doc.RootElement.GetRawText(), out var integerNumber))
 				return integerNumber;
-			else if (reader.TryGetDouble(out var realNumber))
+			else if (double.TryParse(doc.RootElement.GetRawText(), out var realNumber))
 				return realNumber;
-			else {
-				using var doc = JsonDocument.ParseValue(ref reader);
+			else
 				throw new JsonException(string.Format("Cannot parse number {0}", doc.RootElement.ToString()));
-			}
 		}
 		case JsonTokenType.StartArray: {
 			var list = new List<object?>();
@@ -59,12 +60,17 @@ public class TupleJsonDeserializer : JsonConverter<object?> {
 	}
 
 	public override void Write(Utf8JsonWriter writer, object? value, JsonSerializerOptions options) {
-		if (value is not null && value.GetType() == typeof(object)) {
+		if (value is null) {
+			JsonSerializer.Serialize(writer, value);
+			return;
+		}
+
+		if (value is BigInteger bigInteger)
+			writer.WriteRawValue(bigInteger.ToString());
+		else if (value.GetType() == typeof(object)) {
 			writer.WriteStartObject();
 			writer.WriteEndObject();
-		} else if (value is null)
-			JsonSerializer.Serialize(writer, value);
-		else 
+		} else 
 			JsonSerializer.Serialize(writer, value, value.GetType(), options);
 	}
 }

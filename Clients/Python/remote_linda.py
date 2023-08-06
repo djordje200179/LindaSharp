@@ -82,9 +82,15 @@ class RemoteLinda:
 if __name__ == "__main__":
 	linda = RemoteLinda("localhost", 8080)
 
-	script = "linda.Out(('mutex',))"
+	script = """
+import clr
+clr.AddReference("System.Numerics")
+from System.Numerics import BigInteger
+
+linda.Out(('mutex', (1).ToBigInteger(), (2).ToBigInteger(), 3.1))
+"""
 
 	linda.eval_register("script", script)
 	linda.eval_invoke("script")
 
-	print(linda.in_(("mutex",)))
+	print(linda.in_(("mutex", 1, None, None)))
