@@ -67,7 +67,7 @@ class RemoteLinda:
 		self.eval_register(key, file_content)
 
 	def eval_invoke(self, key: str, parameter: Any = None):
-		return self.__send_text_request("POST", f"eval/{key}", parameter, "text/ironpython")
+		return self.__send_json_request("POST", f"eval/{key}", parameter)
 
 	def eval(self, ironpython_code: str):
 		return self.__send_text_request("POST", "eval", ironpython_code, "text/ironpython")
@@ -82,6 +82,9 @@ class RemoteLinda:
 if __name__ == "__main__":
 	linda = RemoteLinda("localhost", 8080)
 
-	linda.out([1, 2, 3])
+	script = "linda.Out(('mutex',))"
 
-	print(linda.in_([1, None, 3]))
+	linda.eval_register("script", script)
+	linda.eval_invoke("script")
+
+	print(linda.in_(("mutex",)))
