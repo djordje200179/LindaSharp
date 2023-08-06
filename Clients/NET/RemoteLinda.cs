@@ -97,19 +97,19 @@ public class RemoteLinda : ILinda {
 		return TryGetTuple(tuplePattern, "rdp", out tuple);
 	}
 
-	public void EvalRegister(string key, string pythonCode) {
+	public void EvalRegister(string key, string ironpythonCode) {
 		var url = $"eval/{key}";
 
 		var request = new HttpRequestMessage(HttpMethod.Put, url) {
-			Content = new StringContent(pythonCode, MediaTypeHeaderValue.Parse("text/ironpython"))
+			Content = new StringContent(ironpythonCode, MediaTypeHeaderValue.Parse("text/ironpython"))
 		};
 
 		using var response = SendRequest(request);
 		response.EnsureSuccessStatusCode();
 	}
 
-	public void EvalRegisterFile(string key, string pythonFilePath) {
-		var content = File.ReadAllText(pythonFilePath);
+	public void EvalRegisterFile(string key, string ironpythonFilePath) {
+		var content = File.ReadAllText(ironpythonFilePath);
 		EvalRegister(key, content);
 	}
 
@@ -125,17 +125,17 @@ public class RemoteLinda : ILinda {
 	}
 
 
-	public void Eval(string pythonCode) {
+	public void Eval(string ironpythonCode) {
 		var request = new HttpRequestMessage(HttpMethod.Post, "eval") {
-			Content = new StringContent(pythonCode, MediaTypeHeaderValue.Parse("text/ironpython"))
+			Content = new StringContent(ironpythonCode, MediaTypeHeaderValue.Parse("text/ironpython"))
 		};
 
 		using var response = SendRequest(request);
 		response.EnsureSuccessStatusCode();
 	}
 
-	public void EvalFile(string pythonFilePath) {
-		var content = File.ReadAllText(pythonFilePath);
+	public void EvalFile(string ironpythonFilePath) {
+		var content = File.ReadAllText(ironpythonFilePath);
 		Eval(content);
 	}
 

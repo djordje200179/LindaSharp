@@ -79,9 +79,9 @@ app.MapPost("/eval", (HttpRequest request) => {
 
 	var codeReadingTask = reader.ReadToEndAsync();
 	codeReadingTask.Wait();
-	var pythonCode = codeReadingTask.Result;
+	var ironpythonCode = codeReadingTask.Result;
 
-	linda.Eval(pythonCode);
+	linda.Eval(ironpythonCode);
 
 	return Results.Ok();
 });
@@ -98,9 +98,9 @@ app.MapPut("/eval/{key}", (HttpRequest request, string key) => {
 
 	var codeReadingTask = reader.ReadToEndAsync();
 	codeReadingTask.Wait();
-	var pythonCode = codeReadingTask.Result;
+	var ironpythonCode = codeReadingTask.Result;
 
-	linda.EvalRegister(key, pythonCode);
+	linda.EvalRegister(key, ironpythonCode);
 
 	return Results.Ok();
 });

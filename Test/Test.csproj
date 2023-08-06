@@ -9,11 +9,11 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <None Remove="FibonachiCalculation.pyi" />
+    <None Remove="FibonachiCalculation.py" />
   </ItemGroup>
 
   <ItemGroup>
-    <Content Include="FibonachiCalculation.pyi">
+    <Content Include="FibonachiCalculation.py">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
   </ItemGroup>

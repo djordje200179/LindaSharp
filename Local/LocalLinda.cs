@@ -126,12 +126,12 @@ public class LocalLinda : ILinda {
 		new Thread(() => function(this)).Start();
 	}
 
-	public void EvalRegister(string key, string pythonCode) {
-		evalScripts[key] = pythonCode;
+	public void EvalRegister(string key, string ironpythonCode) {
+		evalScripts[key] = ironpythonCode;
 	}
 
-	public void EvalRegisterFile(string key, string pythonFilePath) {
-		var content = File.ReadAllText(pythonFilePath);
+	public void EvalRegisterFile(string key, string ironpythonFilePath) {
+		var content = File.ReadAllText(ironpythonFilePath);
 		EvalRegister(key, content);
 	}
 
@@ -146,19 +146,19 @@ public class LocalLinda : ILinda {
 		thread.Start();
 	}
 
-	public void Eval(string pythonCode) {
+	public void Eval(string ironpythonCode) {
 		var scope = pythonEngine.CreateScope();
 		scope.SetVariable("linda", this);
 
-		var thread = new Thread(() => pythonEngine.Execute(pythonCode, scope));
+		var thread = new Thread(() => pythonEngine.Execute(ironpythonCode, scope));
 		thread.Start();
 	}
 
-	public void EvalFile(string pythonFilePath) {
+	public void EvalFile(string ironpythonFilePath) {
 		var scope = pythonEngine.CreateScope();
 		scope.SetVariable("linda", this);
 
-		var thread = new Thread(() => pythonEngine.ExecuteFile(pythonFilePath, scope));
+		var thread = new Thread(() => pythonEngine.ExecuteFile(ironpythonFilePath, scope));
 		thread.Start();
 	}
 
