@@ -1,10 +1,8 @@
 ﻿using System.Diagnostics.CodeAnalysis;
-using IronPython.Hosting;
-using Microsoft.Scripting.Hosting;
 
 namespace LindaSharp;
 
-public class LocalLinda : ILinda {
+public class LocalLinda : IActionEvalLinda {
 	private bool disposed = false;
 
 	private readonly IList<object[]> tupleSpace = new List<object[]>();
@@ -20,9 +18,6 @@ public class LocalLinda : ILinda {
 
 	private readonly IList<WaitingTuple> inWaitingTuples = new List<WaitingTuple>();
 	private readonly IList<WaitingTuple> rdWaitingTuples = new List<WaitingTuple>();
-
-	private readonly ScriptEngine pythonEngine = Python.CreateEngine();
-	private readonly IDictionary<string, string> evalScripts = new Dictionary<string, string>();
 
 	private static bool IsTupleCompatible(object?[] tuplePattern, object[] tuple) {
 		if (tuple.Length != tuplePattern.Length)
@@ -122,44 +117,8 @@ public class LocalLinda : ILinda {
 		return TryGetTuple(tuplePattern, false, out tuple);
 	}
 
-	public void Eval(Action<ILinda> function) {
+	public void Eval(Action<IActionEvalLinda> function) {
 		new Thread(() => function(this)).Start();
-	}
-
-	public void EvalRegister(string key, string ironpythonCode) {
-		evalScripts[key] = ironpythonCode;
-	}
-
-	public void EvalRegisterFile(string key, string ironpythonFilePath) {
-		var content = File.ReadAllText(ironpythonFilePath);
-		EvalRegister(key, content);
-	}
-
-	public void EvalInvoke(string key, object? parameter = null) {
-		var script = evalScripts[key];
-
-		var scope = pythonEngine.CreateScope();
-		scope.SetVariable("linda", this);
-		scope.SetVariable("param", parameter);
-
-		var thread = new Thread(() => pythonEngine.Execute(script, scope));
-		thread.Start();
-	}
-
-	public void Eval(string ironpythonCode) {
-		var scope = pythonEngine.CreateScope();
-		scope.SetVariable("linda", this);
-
-		var thread = new Thread(() => pythonEngine.Execute(ironpythonCode, scope));
-		thread.Start();
-	}
-
-	public void EvalFile(string ironpythonFilePath) {
-		var scope = pythonEngine.CreateScope();
-		scope.SetVariable("linda", this);
-
-		var thread = new Thread(() => pythonEngine.ExecuteFile(ironpythonFilePath, scope));
-		thread.Start();
 	}
 
 	public void Dispose() {

@@ -1,14 +1,10 @@
-﻿import clr
-clr.AddReference("System.Numerics")
-from System.Numerics import BigInteger
-
-while True:
-	if linda.Rdp(("done"))[0]:
+﻿while True:
+	if linda.rdp(("done", )):
 		break
 	
-	a_tuple = linda.In(("a", None))
-	b_tuple = linda.In(("b", None))
-	ind_tuple = linda.In(("ind", None))
+	a_tuple = linda.in_(("a", None))
+	b_tuple = linda.in_(("b", None))
+	ind_tuple = linda.in_(("ind", None))
 
 	a = a_tuple[1]
 	b = b_tuple[1]
@@ -18,8 +14,8 @@ while True:
 
 	c = a + b
 
-	linda.Out(("fib", ind.ToBigInteger(), c.ToBigInteger()))
+	linda.out(("fib", ind, c))
 
-	linda.Out(("a", b.ToBigInteger()))
-	linda.Out(("b", c.ToBigInteger()))
-	linda.Out(("ind", ind.ToBigInteger()))
+	linda.out(("a", b))
+	linda.out(("b", c))
+	linda.out(("ind", ind))

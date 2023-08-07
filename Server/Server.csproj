@@ -8,6 +8,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="IronPython" Version="3.4.1" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\\Local\Local.csproj" />
   </ItemGroup>
 

@@ -13,7 +13,8 @@ builder.Services.Configure<JSON.JsonOptions>(options => {
 
 var app = builder.Build();
 
-var linda = new LocalLinda();
+var localLinda = new LocalLinda();
+var linda = new SharedLinda(localLinda);
 
 app.MapGet("/ping", () => "pong");
 
