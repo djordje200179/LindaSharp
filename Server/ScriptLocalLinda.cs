@@ -1,32 +1,50 @@
-﻿namespace LindaSharp.Server;
+﻿using IronPython.Runtime.Operations;
+namespace LindaSharp.Server;
 
 public class ScriptLocalLinda {
-	private readonly StandardizedLocalLinda linda;
+	private readonly IActionEvalLinda linda;
 
 	public ScriptLocalLinda(IActionEvalLinda linda) {
-		this.linda = new StandardizedLocalLinda(linda);
+		this.linda = linda;
+	}
+
+	private static object?[] ReformatTuple(object?[] tuple) {
+		return tuple.Select(elem => elem switch {
+			int intElem => intElem.ToBigInteger(),
+			_ => elem
+		}).ToArray();
 	}
 
 #pragma warning disable IDE1006 // Naming Styles
 	public void @out(object[] tuple) {
-		linda.Out(tuple);
+		var reformattedTuple = ReformatTuple(tuple);
+
+		linda.Out(reformattedTuple);
 	}
 
 	public object[] in_(object?[] tuple_pattern) {
-		return linda.In(tuple_pattern);
+		var reformattedTuplePattern = ReformatTuple(tuple_pattern);
+
+		return linda.In(reformattedTuplePattern);
 	}
 
 	public object[] rd(object[] tuple_pattern) {
-		return linda.Rd(tuple_pattern);
+		var reformattedTuplePattern = ReformatTuple(tuple_pattern);
+
+		return linda.Rd(reformattedTuplePattern);
 	}
 
 	public object[]? inp(object?[] tuple_pattern) {
-		linda.Inp(tuple_pattern, out var tuple);
+		var reformattedTuplePattern = ReformatTuple(tuple_pattern);
+
+		linda.Inp(reformattedTuplePattern, out var tuple);
 		return tuple;
 	}
 
 	public object[]? rdp(object?[] tuple_pattern) {
-		linda.Rdp(tuple_pattern, out var tuple);
+		var reformattedTuplePattern = ReformatTuple(tuple_pattern);
+
+		linda.Rdp(reformattedTuplePattern, out var tuple);
 		return tuple;
 	}
 
