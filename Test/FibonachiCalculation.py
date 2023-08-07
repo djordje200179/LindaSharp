@@ -2,22 +2,24 @@
 clr.AddReference("System.Numerics")
 from System.Numerics import BigInteger
 
-a_tuple = linda.In(('a', None))
-b_tuple = linda.In(('b', None))
-iteration_tuple = linda.In(('iteration', None))
+while True:
+	if linda.Rdp(("done"))[0]:
+		break
+	
+	a_tuple = linda.In(("a", None))
+	b_tuple = linda.In(("b", None))
+	ind_tuple = linda.In(("ind", None))
 
-a = a_tuple[1]
-b = b_tuple[1]
-iteration = iteration_tuple[1]
+	a = a_tuple[1]
+	b = b_tuple[1]
+	ind = ind_tuple[1]
 
-iteration += 1
+	ind += 1
 
-c = a + b
+	c = a + b
 
-linda.Out(('a', b))
-linda.Out(('b', c))
+	linda.Out(("fib", ind.ToBigInteger(), c.ToBigInteger()))
 
-if iteration != 9:
-	linda.Out(('iteration', iteration))
-else:
-	linda.Out(('done',))
+	linda.Out(("a", b.ToBigInteger()))
+	linda.Out(("b", c.ToBigInteger()))
+	linda.Out(("ind", ind.ToBigInteger()))
