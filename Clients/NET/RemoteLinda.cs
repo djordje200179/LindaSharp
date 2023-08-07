@@ -10,6 +10,12 @@ namespace LindaSharp.Client;
 public class RemoteLinda : ILinda {
 	private readonly HttpClient httpClient;
 	private readonly CancellationTokenSource cancellationTokenSource = new();
+	private static readonly JsonSerializerOptions serializationOptions = new() {
+		Converters = {
+				new TupleJsonDeserializer()
+			},
+		WriteIndented = true
+	};
 
 	public RemoteLinda(string host, ushort port) {
 		httpClient = new() {
@@ -35,21 +41,14 @@ public class RemoteLinda : ILinda {
 	}
 
 	private static object[] ReadTuple(HttpResponseMessage response) {
-		var deserializationOptions = new JsonSerializerOptions {
-			Converters = {
-				new TupleJsonDeserializer()
-			},
-			WriteIndented = true
-		};
-
-		var decodingTask = Task.Run(() => response.Content.ReadFromJsonAsync<object[]>(deserializationOptions));
+		var decodingTask = Task.Run(() => response.Content.ReadFromJsonAsync<object[]>(serializationOptions));
 		decodingTask.Wait();
 		return decodingTask.Result!;
 	}
 
 	private object[] WaitTuple(object?[] tuplePattern, string method) {
 		var request = new HttpRequestMessage(HttpMethod.Get, method) {
-			Content = JsonContent.Create(tuplePattern)
+			Content = JsonContent.Create(tuplePattern, options: serializationOptions)
 		};
 
 		using var response = SendRequest(request);
@@ -59,7 +58,7 @@ public class RemoteLinda : ILinda {
 
 	private bool TryGetTuple(object?[] tuplePattern, string method, [MaybeNullWhen(false)] out object[] tuple) {
 		var request = new HttpRequestMessage(HttpMethod.Get, method) {
-			Content = JsonContent.Create(tuplePattern)
+			Content = JsonContent.Create(tuplePattern, options: serializationOptions)
 		};
 
 		using var response = SendRequest(request);
@@ -75,10 +74,11 @@ public class RemoteLinda : ILinda {
 
 	public void Out(object[] tuple) {
 		var request = new HttpRequestMessage(HttpMethod.Post, "out") {
-			Content = JsonContent.Create(tuple)
+			Content = JsonContent.Create(tuple, options: serializationOptions)
 		};
 
 		using var response = SendRequest(request);
+		response.EnsureSuccessStatusCode();
 	}
 
 	public object[] In(object?[] tuplePattern) {
@@ -117,7 +117,7 @@ public class RemoteLinda : ILinda {
 		var url = $"eval/{key}";
 
 		var request = new HttpRequestMessage(HttpMethod.Post, url) {
-			Content = JsonContent.Create(parameter)
+			Content = JsonContent.Create(parameter, options: serializationOptions)
 		};
 
 		using var response = SendRequest(request);
