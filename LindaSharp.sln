@@ -15,6 +15,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Clients", "Clients", "{4883
 EndProject
 Project("{888888A0-9F3D-457C-B088-3A5042F75D52}") = "PythonClient", "Clients\Python\PythonClient.pyproj", "{4C75E0C6-1172-4BBF-99ED-B248DD3A705B}"
 EndProject
+Project("{54A90642-561A-4BB1-A94E-469ADEE60C69}") = "JSClient", "Clients\JS\JSClient.esproj", "{62EDADEF-A6DD-48D1-8530-67D89A4197A2}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -39,6 +41,12 @@ Global
 		{ED120ED5-4B07-4D63-8B51-DB5A6870E028}.Release|Any CPU.Build.0 = Release|Any CPU
 		{4C75E0C6-1172-4BBF-99ED-B248DD3A705B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{4C75E0C6-1172-4BBF-99ED-B248DD3A705B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{62EDADEF-A6DD-48D1-8530-67D89A4197A2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{62EDADEF-A6DD-48D1-8530-67D89A4197A2}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{62EDADEF-A6DD-48D1-8530-67D89A4197A2}.Debug|Any CPU.Deploy.0 = Debug|Any CPU
+		{62EDADEF-A6DD-48D1-8530-67D89A4197A2}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{62EDADEF-A6DD-48D1-8530-67D89A4197A2}.Release|Any CPU.Build.0 = Release|Any CPU
+		{62EDADEF-A6DD-48D1-8530-67D89A4197A2}.Release|Any CPU.Deploy.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -46,6 +54,7 @@ Global
 	GlobalSection(NestedProjects) = preSolution
 		{ED120ED5-4B07-4D63-8B51-DB5A6870E028} = {48835DB9-C792-4861-A505-B56435BD1FB3}
 		{4C75E0C6-1172-4BBF-99ED-B248DD3A705B} = {48835DB9-C792-4861-A505-B56435BD1FB3}
+		{62EDADEF-A6DD-48D1-8530-67D89A4197A2} = {48835DB9-C792-4861-A505-B56435BD1FB3}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {E70D6D0E-E0F3-4ECC-AF7D-0A9B8434FAD0}
