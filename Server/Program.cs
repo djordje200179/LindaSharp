@@ -28,7 +28,7 @@ app.MapPost("/out", ([FromBody] object[] tuple) => {
 	return Results.StatusCode((int)HttpStatusCode.Created);
 });
 
-app.MapGet("/in", ([FromBody] object?[] tuplePattern) => {
+app.MapDelete("/in", ([FromBody] object?[] tuplePattern) => {
 	try {
 		var tuple = linda.In(tuplePattern);
 
@@ -48,7 +48,7 @@ app.MapGet("/rd", ([FromBody] object?[] tuplePattern) => {
 	}
 });
 
-app.MapGet("/inp", ([FromBody] object?[] tuplePattern) => {
+app.MapDelete("/inp", ([FromBody] object?[] tuplePattern) => {
 	try {
 		var status = linda.Inp(tuplePattern, out var tuple);
 

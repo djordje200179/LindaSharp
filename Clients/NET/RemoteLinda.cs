@@ -46,8 +46,10 @@ public class RemoteLinda : ILinda {
 		return decodingTask.Result!;
 	}
 
-	private object[] WaitTuple(object?[] tuplePattern, string method) {
-		var request = new HttpRequestMessage(HttpMethod.Get, method) {
+	private object[] WaitTuple(object?[] tuplePattern, bool delete) {
+		var method = delete ? HttpMethod.Delete : HttpMethod.Get;
+		var path = delete ? "in" : "rd";
+		var request = new HttpRequestMessage(method, path) {
 			Content = JsonContent.Create(tuplePattern, options: serializationOptions)
 		};
 
@@ -56,8 +58,10 @@ public class RemoteLinda : ILinda {
 		return ReadTuple(response);
 	}
 
-	private bool TryGetTuple(object?[] tuplePattern, string method, [MaybeNullWhen(false)] out object[] tuple) {
-		var request = new HttpRequestMessage(HttpMethod.Get, method) {
+	private bool TryGetTuple(object?[] tuplePattern, bool delete, [MaybeNullWhen(false)] out object[] tuple) {
+		var method = delete ? HttpMethod.Delete : HttpMethod.Get;
+		var path = delete ? "inp" : "rdp";
+		var request = new HttpRequestMessage(method, path) {
 			Content = JsonContent.Create(tuplePattern, options: serializationOptions)
 		};
 
@@ -82,19 +86,19 @@ public class RemoteLinda : ILinda {
 	}
 
 	public object[] In(object?[] tuplePattern) {
-		return WaitTuple(tuplePattern, "in");
+		return WaitTuple(tuplePattern, true);
 	}
 
 	public bool Inp(object?[] tuplePattern, [MaybeNullWhen(false)] out object[] tuple) {
-		return TryGetTuple(tuplePattern, "inp", out tuple);
+		return TryGetTuple(tuplePattern, true, out tuple);
 	}
 
 	public object[] Rd(object?[] tuplePattern) {
-		return WaitTuple(tuplePattern, "rd");
+		return WaitTuple(tuplePattern, false);
 	}
 
 	public bool Rdp(object?[] tuplePattern, [MaybeNullWhen(false)] out object[] tuple) {
-		return TryGetTuple(tuplePattern, "rdp", out tuple);
+		return TryGetTuple(tuplePattern, false, out tuple);
 	}
 
 	public void EvalRegister(string key, string ironpythonCode) {

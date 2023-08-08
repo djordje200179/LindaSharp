@@ -11,8 +11,8 @@ class RemoteLinda:
 	def __init__(self, host: str, port: int):
 		self.__base_url = f"http://{host}:{port}/"
 
-	def __send_text_request(self, http_method: str, linda_method: str, data: any, content_type: str):
-		url = self.__base_url + linda_method
+	def __send_text_request(self, http_method: str, path: str, data: any, content_type: str):
+		url = self.__base_url + path
 		headers = {"Content-Type": content_type}
 		response = requests.request(http_method, url, data=data, headers=headers)
 
@@ -21,8 +21,8 @@ class RemoteLinda:
 
 		return response
 
-	def __send_json_request(self, http_method: str, linda_method: str, data: any):
-		url = self.__base_url + linda_method
+	def __send_json_request(self, http_method: str, path: str, data: any):
+		url = self.__base_url + path
 		response = requests.request(http_method, url, json=data)
 
 		if response.status_code == requests.codes.server_error:
@@ -30,12 +30,16 @@ class RemoteLinda:
 
 		return response
 
-	def __wait_tuple(self, tuple_pattern: list, method: str) -> list:
-		response = self.__send_json_request("GET", method, tuple_pattern)
+	def __wait_tuple(self, tuple_pattern: list, delete: bool) -> list:
+		method = "DELETE" if delete else "GET"
+		path = "in" if delete else "rd"
+		response = self.__send_json_request(method, path, tuple_pattern)
 		return response.json()
 
-	def __try_get_tuple(self, tuple_pattern: list, method: str) -> list:
-		response = self.__send_json_request("GET", method, tuple_pattern)
+	def __try_get_tuple(self, tuple_pattern: list, delete: bool) -> list:
+		method = "DELETE" if delete else "GET"
+		path = "in" if delete else "rd"
+		response = self.__send_json_request(method, path, tuple_pattern)
 
 		if response.status_code == requests.codes.not_found:
 			return None
@@ -46,16 +50,16 @@ class RemoteLinda:
 		self.__send_json_request("POST", "out", tuple)
 
 	def in_(self, tuple_pattern: list) -> list:
-		return self.__wait_tuple(tuple_pattern, "in")
+		return self.__wait_tuple(tuple_pattern, True)
 
 	def rd(self, tuple_pattern: list) -> list:
-		return self.__wait_tuple(tuple_pattern, "rd")
+		return self.__wait_tuple(tuple_pattern, False)
 
 	def inp(self, tuple_pattern: list) -> list:
-		return self.__try_get_tuple(tuple_pattern, "inp")
+		return self.__try_get_tuple(tuple_pattern, True)
 
 	def rdp(self, tuple_pattern: list) -> list:
-		return self.__try_get_tuple(tuple_pattern, "rdp")
+		return self.__try_get_tuple(tuple_pattern, False)
 
 	def eval_register(self, key: str, ironpython_code: str):
 		return self.__send_text_request("PUT", f"eval/{key}", ironpython_code, "text/ironpython")
@@ -77,14 +81,3 @@ class RemoteLinda:
 			file_content = file.read()
 
 		return self.eval(file_content)
-
-
-if __name__ == "__main__":
-	linda = RemoteLinda("localhost", 8080)
-
-	script = "linda.Out(('mutex', 1, 2, 3.1))"
-
-	linda.eval_register("script", script)
-	linda.eval_invoke("script")
-
-	print(linda.in_(("mutex", 1, None, None)))
