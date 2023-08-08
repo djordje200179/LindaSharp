@@ -1,4 +1,4 @@
-from typing import Any
+from typing import Any, Sequence
 import requests
 
 
@@ -46,38 +46,38 @@ class RemoteLinda:
 
 		return response.json()
 
-	def out(self, tuple: list):
+	def out(self, tuple: Sequence) -> None:
 		self.__send_json_request("POST", "out", tuple)
 
-	def in_(self, tuple_pattern: list) -> list:
+	def in_(self, tuple_pattern: Sequence) -> list:
 		return self.__wait_tuple(tuple_pattern, True)
 
-	def rd(self, tuple_pattern: list) -> list:
+	def rd(self, tuple_pattern: Sequence) -> list:
 		return self.__wait_tuple(tuple_pattern, False)
 
-	def inp(self, tuple_pattern: list) -> list:
+	def inp(self, tuple_pattern: Sequence) -> list:
 		return self.__try_get_tuple(tuple_pattern, True)
 
-	def rdp(self, tuple_pattern: list) -> list:
+	def rdp(self, tuple_pattern: Sequence) -> list:
 		return self.__try_get_tuple(tuple_pattern, False)
 
-	def eval_register(self, key: str, ironpython_code: str):
-		return self.__send_text_request("PUT", f"eval/{key}", ironpython_code, "text/ironpython")
+	def eval_register(self, key: str, ironpython_code: str) -> None:
+		self.__send_text_request("PUT", f"eval/{key}", ironpython_code, "text/ironpython")
 
-	def eval_register_file(self, key: str, ironpython_file_path: str):
+	def eval_register_file(self, key: str, ironpython_file_path: str) -> None:
 		with open(ironpython_file_path, "r") as file:
 			file_content = file.read()
 
 		self.eval_register(key, file_content)
 
-	def eval_invoke(self, key: str, parameter: Any = None):
-		return self.__send_json_request("POST", f"eval/{key}", parameter)
+	def eval_invoke(self, key: str, parameter: Any = None) -> None:
+		self.__send_json_request("POST", f"eval/{key}", parameter)
 
-	def eval(self, ironpython_code: str):
-		return self.__send_text_request("POST", "eval", ironpython_code, "text/ironpython")
+	def eval(self, ironpython_code: str) -> None:
+		self.__send_text_request("POST", "eval", ironpython_code, "text/ironpython")
 
-	def eval_file(self, ironpython_file_path: str):
+	def eval_file(self, ironpython_file_path: str) -> None:
 		with open(ironpython_file_path, "r") as file:
 			file_content = file.read()
 
-		return self.eval(file_content)
+		self.eval(file_content)
