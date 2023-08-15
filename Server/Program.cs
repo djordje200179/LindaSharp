@@ -7,7 +7,7 @@ builder.Services
 	.AddSingleton(new SharedLinda(new LocalLinda()))
 	.AddControllers()
 	.AddJsonOptions(options => {
-		options.JsonSerializerOptions.Converters.Add(new TupleJsonDeserializer());
+		options.JsonSerializerOptions.Converters.Add(new TupleJsonSerializer());
 		options.JsonSerializerOptions.WriteIndented = true;
 	});
 

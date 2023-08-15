@@ -12,7 +12,7 @@ public class RemoteLinda : ILinda {
 	private readonly CancellationTokenSource cancellationTokenSource = new();
 	private static readonly JsonSerializerOptions serializationOptions = new() {
 		Converters = {
-				new TupleJsonDeserializer()
+				new TupleJsonSerializer()
 			},
 		WriteIndented = true
 	};
