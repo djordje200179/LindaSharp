@@ -3,13 +3,14 @@
 namespace LindaSharp;
 
 public class LocalLinda : IActionEvalLinda {
-	private bool disposed = false;
+	private volatile bool disposed = false;
 
 	private readonly IList<object[]> tupleSpace = new List<object[]>();
 
 	private class WaitingTuple {
 		public object?[] TuplePattern { get; }
 		public object[]? Tuple { get; set; } = null;
+		public ManualResetEvent ConditionWaiter { get; } = new ManualResetEvent(false);
 
 		public WaitingTuple(object?[] tuplePattern) {
 			TuplePattern = tuplePattern;
@@ -31,23 +32,22 @@ public class LocalLinda : IActionEvalLinda {
 	}
 
 	private object[] WaitTuple(object?[] tuplePattern, bool removeFromSpace) {
+		WaitingTuple? waitingTuple;
 		lock (this) {
 			if (TryGetTuple(tuplePattern, removeFromSpace, out var foundedTuple))
 				return foundedTuple!;
 
-			var waitingTuple = new WaitingTuple(tuplePattern);
+			waitingTuple = new WaitingTuple(tuplePattern);
 
 			(removeFromSpace ? inWaitingTuples : rdWaitingTuples).Add(waitingTuple);
-
-			while (waitingTuple.Tuple is null) {
-				if (disposed)
-					throw new ObjectDisposedException(nameof(LocalLinda));
-
-				Monitor.Wait(this);
-			}
-
-			return waitingTuple.Tuple;
 		}
+
+		waitingTuple.ConditionWaiter.WaitOne();
+		if (disposed)
+			throw new ObjectDisposedException(nameof(LocalLinda));
+		waitingTuple.ConditionWaiter.Dispose();
+
+		return waitingTuple.Tuple!;
 	}
 
 	private bool TryGetTuple(object?[] tuplePattern, bool removeFromSpace, [MaybeNullWhen(false)] out object[] tuple) {
@@ -66,16 +66,14 @@ public class LocalLinda : IActionEvalLinda {
 
 	public void Out(object[] tuple) {
 		lock (this) {
-			var tupleUsed = false;
-
 			foreach (var waitingTuple in rdWaitingTuples.Reverse()) {
 				if (!IsTupleCompatible(waitingTuple.TuplePattern, tuple))
 					continue;
 
 				waitingTuple.Tuple = (object[])tuple.Clone();
 				rdWaitingTuples.Remove(waitingTuple);
+				waitingTuple.ConditionWaiter.Set();
 
-				tupleUsed = true;
 			}
 
 			var tupleInputted = false;
@@ -86,8 +84,8 @@ public class LocalLinda : IActionEvalLinda {
 
 				waitingTuple.Tuple = (object[])tuple.Clone();
 				inWaitingTuples.Remove(waitingTuple);
+				waitingTuple.ConditionWaiter.Set();
 
-				tupleUsed = true;
 				tupleInputted = true;
 
 				break;
@@ -95,9 +93,6 @@ public class LocalLinda : IActionEvalLinda {
 
 			if (!tupleInputted)
 				tupleSpace.Add((object[])tuple.Clone());
-
-			if (tupleUsed)
-				Monitor.PulseAll(this);
 		}
 	}
 
@@ -127,8 +122,10 @@ public class LocalLinda : IActionEvalLinda {
 
 		disposed = true;
 		GC.SuppressFinalize(this);
-		lock (this) {
-			Monitor.PulseAll(this);
-		}
+
+		foreach (var waitingTuple in inWaitingTuples)
+			waitingTuple.ConditionWaiter.Set();
+		foreach (var waitingTuple in rdWaitingTuples)
+			waitingTuple.ConditionWaiter.Set();
 	}
 }
