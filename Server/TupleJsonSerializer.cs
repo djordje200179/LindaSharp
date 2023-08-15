@@ -1,4 +1,5 @@
-﻿using System.Numerics;
+﻿using LindaSharp.Server.Types;
+using System.Numerics;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
@@ -26,7 +27,7 @@ public class TupleJsonSerializer : JsonConverter<object?> {
 				throw new JsonException(string.Format("Cannot parse number {0}", doc.RootElement.ToString()));
 		}
 		case JsonTokenType.StartArray: {
-			var list = new List<object?>();
+			var list = new ComparableList();
 			while (reader.Read()) {
 				if (reader.TokenType == JsonTokenType.EndArray)
 					return list.ToArray();
