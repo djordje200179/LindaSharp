@@ -27,8 +27,25 @@
 
 <h2>Index</h2>
 
-<ul class="list-group">
+<section class="accordion" id="tuples-list">
+	@{var tupleIndex = 0;}
 	@foreach (var tuple in tuples) {
-		<li class="list-group-item">@TupleToString(tuple)</li>
+		<div class="accordion-item">
+			<h2 class="accordion-header" id="tuple-@tupleIndex-heading">
+				<button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#tuple-@tupleIndex-collapse">
+					@TupleToString(tuple)
+				</button>
+			</h2>
+			<div class="accordion-collapse collapse" id="tuple-@tupleIndex-collapse" data-bs-parent="#tuples-list">
+				<div class="accordion-body">
+					<ul>
+						@foreach (var element in tuple) {
+							<li>@element</li>
+						}
+					</ul>
+				</div>
+			</div>
+		</div>
+		tupleIndex++;
 	}
-</ul>
+</section>
