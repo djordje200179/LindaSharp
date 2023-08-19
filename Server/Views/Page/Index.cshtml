@@ -1,7 +1,34 @@
-﻿@{
+﻿@using System.Text;
+@{
+	ViewBag.Title = "Index";
+	Layout = "_Layout";
 
+	var tuples = (IEnumerable<object[]>)ViewBag.TupleSpace;
+
+	string TupleToString(object[] tuple) {
+		var sb = new StringBuilder();
+		sb.Append('[');
+		for (int i = 0; i < tuple.Length; i++) {
+			var elementRepresentation = tuple[i].ToString()!;
+			if (elementRepresentation.Length > 10)
+				elementRepresentation = elementRepresentation.Substring(0, 7) + "...";
+
+			sb.Append(elementRepresentation);
+
+			if (i < tuple.Length - 1) {
+				sb.Append(", ");
+			}
+		}
+		sb.Append(']');
+
+		return sb.ToString();
+	}
 }
 
 <h2>Index</h2>
 
-<p>Hello from our View Template!</p>
+<ul class="list-group">
+	@foreach (var tuple in tuples) {
+		<li class="list-group-item">@TupleToString(tuple)</li>
+	}
+</ul>
