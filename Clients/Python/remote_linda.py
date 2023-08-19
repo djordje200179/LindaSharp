@@ -9,7 +9,7 @@ class ObjectDisposedException(Exception):
 
 class RemoteLinda:
 	def __init__(self, host: str, port: int):
-		self.__base_url = f"http://{host}:{port}/"
+		self.__base_url = f"http://{host}:{port}/actions/"
 
 	def __send_text_request(self, http_method: str, path: str, data: any, content_type: str):
 		url = self.__base_url + path

@@ -3,7 +3,7 @@ using System.Net;
 
 namespace LindaSharp.Server.Controllers;
 
-[Route("/")]
+[Route("/actions")]
 [ApiController]
 public class ActionsController : ControllerBase {
 	private readonly SharedLinda linda;
@@ -20,7 +20,7 @@ public class ActionsController : ControllerBase {
 			return StatusCode((int)HttpStatusCode.InternalServerError);
 		}
 
-		return Created("/rd", tuple);
+		return Created("/actions/rd", tuple);
 	}
 
 	[HttpDelete("/in")]

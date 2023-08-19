@@ -19,7 +19,7 @@ public class RemoteLinda : ILinda {
 
 	public RemoteLinda(string host, ushort port) {
 		httpClient = new() {
-			BaseAddress = new Uri($"http://{host}:{port}"),
+			BaseAddress = new Uri($"http://{host}:{port}/actions"),
 			Timeout = Timeout.InfiniteTimeSpan
 		};
 	}

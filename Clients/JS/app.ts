@@ -2,7 +2,7 @@ class RemoteLinda {
 	private baseUrl: string;
 
 	public constructor(host: string, port: number) {
-		this.baseUrl = `http://${host}:${port}/`
+		this.baseUrl = `http://${host}:${port}/actions/`
 	}
 
 	private sendTextRequest(method: string, path: string, data: any, contentType: string) {
