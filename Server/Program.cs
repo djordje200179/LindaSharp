@@ -5,7 +5,7 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services
 	.AddSingleton(new SharedLinda(new LocalLinda()))
-	.AddControllers()
+	.AddControllersWithViews()
 	.AddJsonOptions(options => {
 		options.JsonSerializerOptions.Converters.Add(new TupleJsonSerializer());
 		options.JsonSerializerOptions.WriteIndented = true;
