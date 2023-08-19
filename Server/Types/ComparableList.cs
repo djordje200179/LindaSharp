@@ -1,4 +1,6 @@
-﻿namespace LindaSharp.Server.Types;
+﻿using System.Text;
+
+namespace LindaSharp.Server.Types;
 
 internal class ComparableList: List<object?>, IEquatable<ComparableList> {
 	public override bool Equals(object? other) {
@@ -28,5 +30,24 @@ internal class ComparableList: List<object?>, IEquatable<ComparableList> {
 		}
 
 		return true;
+	}
+
+	public override string ToString() {
+		var sb = new StringBuilder();
+		sb.Append('[');
+
+		var first = true;
+		foreach (var value in this) {
+			if (!first)
+				sb.Append(", ");
+
+			sb.Append(value);
+
+			first = false;
+		}
+
+		sb.Append(']');
+
+		return sb.ToString();
 	}
 }

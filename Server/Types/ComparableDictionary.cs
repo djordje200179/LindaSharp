@@ -1,4 +1,6 @@
-﻿namespace LindaSharp.Server.Types;
+﻿using System.Text;
+
+namespace LindaSharp.Server.Types;
 
 internal class ComparableDictionary : Dictionary<string, object?>, IEquatable<ComparableDictionary> {
 	public override bool Equals(object? other) {
@@ -28,5 +30,26 @@ internal class ComparableDictionary : Dictionary<string, object?>, IEquatable<Co
 		}
 
 		return true;
+	}
+
+	public override string ToString() {
+		var sb = new StringBuilder();
+		sb.Append('{');
+
+		var first = true;
+		foreach (var (key, value) in this) {
+			if (!first)
+				sb.Append(", ");
+
+			sb.Append(key);
+			sb.Append(':');
+			sb.Append(value);
+
+			first = false;
+		}
+
+		sb.Append('}');
+
+		return sb.ToString();
 	}
 }
