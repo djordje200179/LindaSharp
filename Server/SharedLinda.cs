@@ -20,7 +20,7 @@ public interface IScriptEvalLinda : ILinda {
 	}
 }
 
-public class SharedLinda : IScriptEvalLinda {
+public class SharedLinda : IScriptEvalLinda, ISpaceViewLinda {
 	private readonly ILinda localLinda;
 	private readonly ScriptLocalLinda scriptLocalLinda;
 
@@ -91,5 +91,9 @@ public class SharedLinda : IScriptEvalLinda {
 	public void Dispose() {
 		GC.SuppressFinalize(this);
 		localLinda.Dispose();
+	}
+
+	public IEnumerable<object[]> ReadAll() {
+		return localLinda is ISpaceViewLinda spaceViewLinda ? spaceViewLinda.ReadAll() : throw new NotSupportedException();
 	}
 }

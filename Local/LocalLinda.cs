@@ -2,7 +2,7 @@
 
 namespace LindaSharp;
 
-public class LocalLinda : IActionEvalLinda {
+public class LocalLinda : IActionEvalLinda, ISpaceViewLinda {
 	private volatile bool disposed = false;
 
 	private readonly IList<object[]> tupleSpace = new List<object[]>();
@@ -127,5 +127,9 @@ public class LocalLinda : IActionEvalLinda {
 			waitingTuple.ConditionWaiter.Set();
 		foreach (var waitingTuple in rdWaitingTuples)
 			waitingTuple.ConditionWaiter.Set();
+	}
+
+	public IEnumerable<object[]> ReadAll() {
+		return tupleSpace.Select(tuple => (object[])tuple.Clone()).ToList();
 	}
 }

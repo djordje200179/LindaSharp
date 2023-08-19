@@ -15,3 +15,7 @@ public interface ILinda : IDisposable {
 public interface IActionEvalLinda : ILinda {
 	public void Eval(Action<IActionEvalLinda> function);
 }
+
+public interface ISpaceViewLinda : ILinda {
+	public IEnumerable<object[]> ReadAll();
+}
