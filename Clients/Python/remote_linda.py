@@ -9,10 +9,12 @@ class ObjectDisposedException(Exception):
 
 class RemoteLinda:
 	def __init__(self, host: str, port: int):
-		self.__base_url = f"http://{host}:{port}/actions/"
+		self.__base_url = f"http://{host}:{port}/"
+		self.__actions_url = self.__base_url + "actions/"
+		self.__health_url = self.__base_url + "health/"
 
 	def __send_text_request(self, http_method: str, path: str, data: any, content_type: str):
-		url = self.__base_url + path
+		url = self.__actions_url + path
 		headers = {"Content-Type": content_type}
 		response = requests.request(http_method, url, data=data, headers=headers)
 
@@ -22,7 +24,7 @@ class RemoteLinda:
 		return response
 
 	def __send_json_request(self, http_method: str, path: str, data: any):
-		url = self.__base_url + path
+		url = self.__actions_url + path
 		response = requests.request(http_method, url, json=data)
 
 		if response.status_code == requests.codes.server_error:
@@ -81,3 +83,12 @@ class RemoteLinda:
 			file_content = file.read()
 
 		self.eval(file_content)
+
+	def is_healthy(self) -> bool:
+		try:
+			url = self.__health_url + "ping"
+			response = requests.get(url, timeout=1)
+
+			return response.status_code % 100 == 2
+		except:
+			return False
