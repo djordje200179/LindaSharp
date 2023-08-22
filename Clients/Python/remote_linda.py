@@ -2,7 +2,7 @@ from typing import Any, Sequence
 import requests
 
 
-class ObjectDisposedException(Exception):
+class LindaDisposedException(Exception):
 	def __str__(self):
 		return "Server Linda was disposed"
 
@@ -19,7 +19,7 @@ class RemoteLinda:
 		response = requests.request(http_method, url, data=data, headers=headers)
 
 		if response.status_code == requests.codes.server_error:
-			raise ObjectDisposedException()
+			raise LindaDisposedException()
 
 		return response
 
@@ -28,7 +28,7 @@ class RemoteLinda:
 		response = requests.request(http_method, url, json=data)
 
 		if response.status_code == requests.codes.server_error:
-			raise ObjectDisposedException()
+			raise LindaDisposedException()
 
 		return response
 
@@ -85,8 +85,9 @@ class RemoteLinda:
 		self.eval(file_content)
 
 	def is_healthy(self) -> bool:
+		url = self.__health_url + "ping"
+		
 		try:
-			url = self.__health_url + "ping"
 			response = requests.get(url, timeout=1)
 
 			return response.status_code % 100 == 2
