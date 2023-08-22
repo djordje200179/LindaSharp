@@ -3,7 +3,13 @@ using System.Numerics;
 
 var remoteClient = new RemoteLinda("localhost", 8080);
 
-Thread.Sleep(5000);
+while (true) {
+	if (remoteClient.IsHealthy())
+		break;
+
+	Console.WriteLine("Waiting for server...");
+	Thread.Sleep(1000);
+}
 
 remoteClient.Out(new object[] { "a", 0 });
 remoteClient.Out(new object[] { "b", 1 });

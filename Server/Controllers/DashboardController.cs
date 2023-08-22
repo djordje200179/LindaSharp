@@ -2,10 +2,10 @@
 
 namespace LindaSharp.Server.Controllers;
 
-public class PageController : Controller {
+public class DashboardController : Controller {
 	private readonly SharedLinda linda;
 
-	public PageController(SharedLinda linda) {
+	public DashboardController(SharedLinda linda) {
 		this.linda = linda;
 	}
 

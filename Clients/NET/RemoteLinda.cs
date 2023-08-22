@@ -8,7 +8,7 @@ using System.Text.Json;
 namespace LindaSharp.Client;
 
 public class RemoteLinda : ILinda {
-	private readonly HttpClient httpClient;
+	private readonly HttpClient actionsHttpClient, healthHttpClient;
 	private readonly CancellationTokenSource cancellationTokenSource = new();
 	private static readonly JsonSerializerOptions serializationOptions = new() {
 		Converters = {
@@ -18,16 +18,21 @@ public class RemoteLinda : ILinda {
 	};
 
 	public RemoteLinda(string host, ushort port) {
-		httpClient = new() {
-			BaseAddress = new Uri($"http://{host}:{port}/actions"),
+		actionsHttpClient = new() {
+			BaseAddress = new Uri($"http://{host}:{port}/actions/"),
 			Timeout = Timeout.InfiniteTimeSpan
+		};
+
+		healthHttpClient = new() {
+			BaseAddress = new Uri($"http://{host}:{port}/health/"),
+			Timeout = TimeSpan.FromSeconds(1)
 		};
 	}
 
 	private HttpResponseMessage SendRequest(HttpRequestMessage request) {
 		HttpResponseMessage response;
 		try {
-			using var requestTask = httpClient.SendAsync(request, cancellationTokenSource.Token);
+			using var requestTask = actionsHttpClient.SendAsync(request, cancellationTokenSource.Token);
 			requestTask.Wait();
 			response = requestTask.Result;
 		} catch (TaskCanceledException) {
@@ -148,6 +153,18 @@ public class RemoteLinda : ILinda {
 
 		cancellationTokenSource.Cancel();
 		cancellationTokenSource.Dispose();
-		httpClient.Dispose();
+		actionsHttpClient.Dispose();
+	}
+
+	public bool IsHealthy() {
+		try {
+			var requestTask = healthHttpClient.GetAsync("ping");
+			requestTask.Wait();
+			using var response = requestTask.Result;
+
+			return response.IsSuccessStatusCode;
+		} catch (Exception) {
+			return false;
+		}
 	}
 }
