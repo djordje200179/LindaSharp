@@ -9,7 +9,7 @@ public class DashboardController : Controller {
 		this.linda = linda;
 	}
 
-	[Route("/")]
+	[Route("")]
 	public IActionResult Index() {
 		ViewBag.TupleSpace = linda.ReadAll();
 		return View();

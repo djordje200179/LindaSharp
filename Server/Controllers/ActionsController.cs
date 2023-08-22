@@ -3,7 +3,7 @@ using System.Net;
 
 namespace LindaSharp.Server.Controllers;
 
-[Route("/actions")]
+[Route("actions")]
 [ApiController]
 public class ActionsController : ControllerBase {
 	private readonly SharedLinda linda;
@@ -12,7 +12,7 @@ public class ActionsController : ControllerBase {
 		this.linda = linda;
 	}
 
-	[HttpPost("/out")]
+	[HttpPost("out")]
 	public IActionResult Out([FromBody] object[] tuple) {
 		try {
 			linda.Out(tuple);
@@ -23,7 +23,7 @@ public class ActionsController : ControllerBase {
 		return Created("/actions/rd", tuple);
 	}
 
-	[HttpDelete("/in")]
+	[HttpDelete("in")]
 	public IActionResult In([FromBody] object?[] tuplePattern) {
 		try {
 			var tuple = linda.In(tuplePattern);
@@ -34,7 +34,7 @@ public class ActionsController : ControllerBase {
 		}
 	}
 
-	[HttpGet("/rd")]
+	[HttpGet("rd")]
 	public IActionResult Rd([FromBody] object?[] tuplePattern) {
 		try {
 			var tuple = linda.Rd(tuplePattern);
@@ -45,7 +45,7 @@ public class ActionsController : ControllerBase {
 		}
 	}
 
-	[HttpDelete("/inp")]
+	[HttpDelete("inp")]
 	public IActionResult Inp([FromBody] object?[] tuplePattern) {
 		try {
 			var status = linda.Inp(tuplePattern, out var tuple);
@@ -56,7 +56,7 @@ public class ActionsController : ControllerBase {
 		}
 	}
 
-	[HttpGet("/rdp")]
+	[HttpGet("rdp")]
 	public IActionResult Rdp([FromBody] object?[] tuplePattern) {
 		try {
 			var status = linda.Rdp(tuplePattern, out var tuple);
@@ -67,7 +67,7 @@ public class ActionsController : ControllerBase {
 		}
 	}
 
-	[HttpPost("/eval")]
+	[HttpPost("eval")]
 	public IActionResult Eval() {
 		var request = HttpContext.Request;
 
@@ -89,7 +89,7 @@ public class ActionsController : ControllerBase {
 		return Ok();
 	}
 
-	[HttpPut("/eval/{key}")]
+	[HttpPut("eval/{key}")]
 	public IActionResult EvalRegister(string key) {
 		var request = HttpContext.Request;
 
@@ -111,7 +111,7 @@ public class ActionsController : ControllerBase {
 		return Ok();
 	}
 
-	[HttpPost("/eval/{key}")]
+	[HttpPost("eval/{key}")]
 	public IActionResult EvalInvoke(string key, [FromBody] object? parameter) {
 		try {
 			linda.EvalInvoke(key, parameter);
