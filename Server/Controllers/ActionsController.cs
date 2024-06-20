@@ -3,7 +3,7 @@ using System.Net;
 
 namespace LindaSharp.Server.Controllers;
 
-[Route("actions")]
+[Route("api/actions")]
 [ApiController]
 public class ActionsController : ControllerBase {
 	private readonly SharedLinda linda;

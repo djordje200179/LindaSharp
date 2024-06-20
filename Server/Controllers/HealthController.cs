@@ -2,7 +2,7 @@
 
 namespace LindaSharp.Server.Controllers;
 
-[Route("health")]
+[Route("api/health")]
 [ApiController]
 public class HealthController : ControllerBase {
 	[HttpGet("ping")]
