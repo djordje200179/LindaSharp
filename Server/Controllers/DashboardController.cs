@@ -3,13 +3,7 @@
 namespace LindaSharp.Server.Controllers;
 
 [Route("/")]
-public class DashboardController : Controller {
-	private readonly SharedLinda linda;
-
-	public DashboardController(SharedLinda linda) {
-		this.linda = linda;
-	}
-
+public class DashboardController(SharedLinda linda) : Controller {
 	[HttpGet("")]
 	public IActionResult Index() {
 		ViewBag.TupleSpace = linda.ReadAll();

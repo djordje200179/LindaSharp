@@ -41,17 +41,18 @@ public class TupleJsonSerializer : JsonConverter<object?> {
 			var dictionary = new ComparableDictionary();
 
 			while (reader.Read()) {
-				if (reader.TokenType == JsonTokenType.EndObject)
+				if (reader.TokenType == JsonTokenType.EndObject) {
 					return dictionary;
-				else if (reader.TokenType == JsonTokenType.PropertyName) {
+				} else if (reader.TokenType == JsonTokenType.PropertyName) {
 					var key = reader.GetString()!;
 					reader.Read();
 
 					var value = Read(ref reader, typeof(object), options);
 
 					dictionary.Add(key, value);
-				} else
+				} else {
 					throw new JsonException();
+				}
 			}
 
 			throw new JsonException();
@@ -66,12 +67,13 @@ public class TupleJsonSerializer : JsonConverter<object?> {
 			return;
 		}
 
-		if (value is BigInteger bigInteger)
+		if (value is BigInteger bigInteger) {
 			writer.WriteRawValue(bigInteger.ToString());
-		else if (value.GetType() == typeof(object)) {
+		} else if (value.GetType() == typeof(object)) {
 			writer.WriteStartObject();
 			writer.WriteEndObject();
-		} else 
+		} else {
 			JsonSerializer.Serialize(writer, value, value.GetType(), options);
+		}
 	}
 }

@@ -20,37 +20,20 @@ public interface IScriptEvalLinda : ILinda {
 	}
 }
 
-public class SharedLinda : IScriptEvalLinda, ISpaceViewLinda {
-	private readonly ILinda localLinda;
-	private readonly ScriptLocalLinda scriptLocalLinda;
+public class SharedLinda(IActionEvalLinda linda) : IScriptEvalLinda, ISpaceViewLinda {
+	private readonly ILinda localLinda = linda;
+	private readonly ScriptLocalLinda scriptLocalLinda = new(linda);
 
 	private readonly ScriptEngine pythonEngine = Python.CreateEngine();
 	private readonly IDictionary<string, string> evalScripts = new Dictionary<string, string>();
 
-	public SharedLinda(IActionEvalLinda linda) {
-		localLinda = linda;
-		scriptLocalLinda = new ScriptLocalLinda(linda);
-	}
+	public void Out(object[] tuple) => localLinda.Out(tuple);
 
-	public void Out(object[] tuple) {
-		localLinda.Out(tuple);
-	}
+	public object[] In(object?[] tuplePattern) => localLinda.In(tuplePattern);
+	public object[] Rd(object?[] tuplePattern) => localLinda.In(tuplePattern);
 
-	public object[] In(object?[] tuplePattern) {
-		return localLinda.In(tuplePattern);
-	}
-
-	public bool Inp(object?[] tuplePattern, [MaybeNullWhen(false)] out object[] tuple) {
-		return localLinda.Inp(tuplePattern, out tuple);
-	}
-
-	public object[] Rd(object?[] tuplePattern) {
-		return localLinda.In(tuplePattern);
-	}
-
-	public bool Rdp(object?[] tuplePattern, [MaybeNullWhen(false)] out object[] tuple) {
-		return localLinda.Rdp(tuplePattern, out tuple);
-	}
+	public bool Inp(object?[] tuplePattern, [MaybeNullWhen(false)] out object[] tuple) => localLinda.Inp(tuplePattern, out tuple);
+	public bool Rdp(object?[] tuplePattern, [MaybeNullWhen(false)] out object[] tuple) => localLinda.Rdp(tuplePattern, out tuple);
 
 	public void EvalRegister(string key, string ironpythonCode) {
 		evalScripts[key] = ironpythonCode;

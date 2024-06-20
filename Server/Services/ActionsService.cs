@@ -5,13 +5,7 @@ using System.Net;
 using LindaTuple = LindaSharp.Services.Tuple;
 namespace LindaSharp.Server.Services;
 
-public class ActionsService : Actions.ActionsBase {
-	private readonly SharedLinda linda;
-
-	public ActionsService(SharedLinda linda) {
-		this.linda = linda;
-	}
-
+public class ActionsService(SharedLinda linda) : Actions.ActionsBase {
 	public override Task<LindaTuple> In(TuplePattern request, ServerCallContext context) {
 		return base.In(request, context);
 	}

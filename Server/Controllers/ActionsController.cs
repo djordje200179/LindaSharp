@@ -5,13 +5,7 @@ namespace LindaSharp.Server.Controllers;
 
 [Route("api/actions")]
 [ApiController]
-public class ActionsController : ControllerBase {
-	private readonly SharedLinda linda;
-
-	public ActionsController(SharedLinda linda) {
-		this.linda = linda;
-	}
-
+public class ActionsController(SharedLinda linda) : ControllerBase {
 	[HttpPost("out")]
 	public IActionResult Out([FromBody] object[] tuple) {
 		try {
@@ -72,13 +66,14 @@ public class ActionsController : ControllerBase {
 		var request = HttpContext.Request;
 
 		StreamReader reader;
-		if (request.ContentType == "text/ironpython")
+		if (request.ContentType == "text/ironpython") {
 			reader = new StreamReader(request.Body);
-		else if (request.Form.Files.Count == 1) {
+		} else if (request.Form.Files.Count == 1) {
 			var file = request.Form.Files[0];
 			reader = new StreamReader(file.OpenReadStream());
-		} else
+		} else {
 			return BadRequest();
+		}
 
 		var codeReadingTask = reader.ReadToEndAsync();
 		codeReadingTask.Wait();
@@ -94,13 +89,14 @@ public class ActionsController : ControllerBase {
 		var request = HttpContext.Request;
 
 		StreamReader reader;
-		if (request.ContentType == "text/ironpython")
+		if (request.ContentType == "text/ironpython") {
 			reader = new StreamReader(request.Body);
-		else if (request.Form.Files.Count == 1) {
+		} else if (request.Form.Files.Count == 1) {
 			var file = request.Form.Files[0];
 			reader = new StreamReader(file.OpenReadStream());
-		} else
+		} else {
 			return BadRequest();
+		}
 
 		var codeReadingTask = reader.ReadToEndAsync();
 		codeReadingTask.Wait();

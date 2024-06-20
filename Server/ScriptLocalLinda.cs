@@ -1,13 +1,7 @@
 ﻿using IronPython.Runtime.Operations;
 namespace LindaSharp.Server;
 
-public class ScriptLocalLinda {
-	private readonly IActionEvalLinda linda;
-
-	public ScriptLocalLinda(IActionEvalLinda linda) {
-		this.linda = linda;
-	}
-
+public class ScriptLocalLinda(IActionEvalLinda linda) {
 	private static object?[] ReformatTuple(object?[] tuple) {
 		return tuple.Select(elem => elem switch {
 			int intElem => intElem.ToBigInteger(),

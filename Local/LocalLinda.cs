@@ -5,28 +5,25 @@ namespace LindaSharp;
 public class LocalLinda : IActionEvalLinda, ISpaceViewLinda {
 	private volatile bool disposed = false;
 
-	private readonly IList<object[]> tupleSpace = new List<object[]>();
+	private readonly IList<object[]> tupleSpace = [];
 
-	private class WaitingTuple {
-		public object?[] TuplePattern { get; }
+	private class WaitingTuple(object?[] tuplePattern) {
+		public object?[] TuplePattern { get; } = tuplePattern;
 		public object[]? Tuple { get; set; } = null;
 		public ManualResetEvent ConditionWaiter { get; } = new ManualResetEvent(false);
-
-		public WaitingTuple(object?[] tuplePattern) {
-			TuplePattern = tuplePattern;
-		}
 	}
 
-	private readonly IList<WaitingTuple> inWaitingTuples = new List<WaitingTuple>();
-	private readonly IList<WaitingTuple> rdWaitingTuples = new List<WaitingTuple>();
+	private readonly IList<WaitingTuple> inWaitingTuples = [];
+	private readonly IList<WaitingTuple> rdWaitingTuples = [];
 
 	private static bool IsTupleCompatible(object?[] tuplePattern, object[] tuple) {
 		if (tuple.Length != tuplePattern.Length)
 			return false;
 
-		for (var i = 0; i < tuple.Length; i++)
+		for (var i = 0; i < tuple.Length; i++) {
 			if (tuplePattern[i] is not null && !tuplePattern[i]!.Equals(tuple[i]))
 				return false;
+		}
 
 		return true;
 	}
@@ -43,8 +40,7 @@ public class LocalLinda : IActionEvalLinda, ISpaceViewLinda {
 		}
 
 		waitingTuple.ConditionWaiter.WaitOne();
-		if (disposed)
-			throw new ObjectDisposedException(nameof(LocalLinda));
+		ObjectDisposedException.ThrowIf(disposed, this);
 		waitingTuple.ConditionWaiter.Dispose();
 
 		return waitingTuple.Tuple!;
@@ -96,25 +92,13 @@ public class LocalLinda : IActionEvalLinda, ISpaceViewLinda {
 		}
 	}
 
-	public object[] In(object?[] tuplePattern) {
-		return WaitTuple(tuplePattern, true);
-	}
+	public object[] In(object?[] tuplePattern) => WaitTuple(tuplePattern, true);
+	public object[] Rd(object?[] tuplePattern) => WaitTuple(tuplePattern, false);
 
-	public bool Inp(object?[] tuplePattern, [MaybeNullWhen(false)] out object[] tuple) {
-		return TryGetTuple(tuplePattern, true, out tuple);
-	}
+	public bool Inp(object?[] tuplePattern, [MaybeNullWhen(false)] out object[] tuple) => TryGetTuple(tuplePattern, true, out tuple);
+	public bool Rdp(object?[] tuplePattern, [MaybeNullWhen(false)] out object[] tuple) => TryGetTuple(tuplePattern, false, out tuple);
 
-	public object[] Rd(object?[] tuplePattern) {
-		return WaitTuple(tuplePattern, false);
-	}
-
-	public bool Rdp(object?[] tuplePattern, [MaybeNullWhen(false)] out object[] tuple) {
-		return TryGetTuple(tuplePattern, false, out tuple);
-	}
-
-	public void Eval(Action<IActionEvalLinda> function) {
-		new Thread(() => function(this)).Start();
-	}
+	public void Eval(Action<IActionEvalLinda> func) => new Thread(() => func(this)).Start();
 
 	public void Dispose() {
 		if (disposed)
