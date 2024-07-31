@@ -7,27 +7,23 @@ using System.Text.Json;
 
 namespace LindaSharp.Client;
 
-public class RemoteLinda : ILinda {
-	private readonly HttpClient actionsHttpClient, healthHttpClient;
+public class RemoteLinda(string host, ushort port) : ILinda {
+	private readonly HttpClient actionsHttpClient = new() {
+		BaseAddress = new Uri($"http://{host}:{port}/api/actions/"),
+		Timeout = Timeout.InfiniteTimeSpan
+	};
+	private readonly HttpClient healthHttpClient = new() {
+		BaseAddress = new Uri($"http://{host}:{port}/api/health/"),
+		Timeout = TimeSpan.FromSeconds(1)
+	};
+
 	private readonly CancellationTokenSource cancellationTokenSource = new();
 	private static readonly JsonSerializerOptions serializationOptions = new() {
 		Converters = {
-				new TupleJsonSerializer()
-			},
+			new TupleJsonSerializer()
+		},
 		WriteIndented = true
 	};
-
-	public RemoteLinda(string host, ushort port) {
-		actionsHttpClient = new() {
-			BaseAddress = new Uri($"http://{host}:{port}/actions/"),
-			Timeout = Timeout.InfiniteTimeSpan
-		};
-
-		healthHttpClient = new() {
-			BaseAddress = new Uri($"http://{host}:{port}/health/"),
-			Timeout = TimeSpan.FromSeconds(1)
-		};
-	}
 
 	private HttpResponseMessage SendRequest(HttpRequestMessage request) {
 		HttpResponseMessage response;
@@ -39,8 +35,7 @@ public class RemoteLinda : ILinda {
 			throw new ObjectDisposedException(nameof(RemoteLinda));
 		}
 
-		if (response.StatusCode == HttpStatusCode.InternalServerError)
-			throw new ObjectDisposedException(nameof(ILinda));
+		ObjectDisposedException.ThrowIf(response.StatusCode == HttpStatusCode.InternalServerError, this);
 
 		return response;
 	}
@@ -52,9 +47,10 @@ public class RemoteLinda : ILinda {
 	}
 
 	private object[] WaitTuple(object?[] tuplePattern, bool delete) {
-		var method = delete ? HttpMethod.Delete : HttpMethod.Get;
-		var path = delete ? "in" : "rd";
-		var request = new HttpRequestMessage(method, path) {
+		var request = new HttpRequestMessage(
+			delete ? HttpMethod.Delete : HttpMethod.Get,
+			delete ? "in" : "rd"
+		) {
 			Content = JsonContent.Create(tuplePattern, options: serializationOptions)
 		};
 
@@ -64,9 +60,10 @@ public class RemoteLinda : ILinda {
 	}
 
 	private bool TryGetTuple(object?[] tuplePattern, bool delete, [MaybeNullWhen(false)] out object[] tuple) {
-		var method = delete ? HttpMethod.Delete : HttpMethod.Get;
-		var path = delete ? "inp" : "rdp";
-		var request = new HttpRequestMessage(method, path) {
+		var request = new HttpRequestMessage(
+			delete ? HttpMethod.Delete : HttpMethod.Get, 
+			delete ? "inp" : "rdp"
+		) {
 			Content = JsonContent.Create(tuplePattern, options: serializationOptions)
 		};
 
@@ -90,21 +87,12 @@ public class RemoteLinda : ILinda {
 		response.EnsureSuccessStatusCode();
 	}
 
-	public object[] In(object?[] tuplePattern) {
-		return WaitTuple(tuplePattern, true);
-	}
+	public object[] In(object?[] tuplePattern) => WaitTuple(tuplePattern, true);
+	public object[] Rd(object?[] tuplePattern) => WaitTuple(tuplePattern, false);
 
-	public bool Inp(object?[] tuplePattern, [MaybeNullWhen(false)] out object[] tuple) {
-		return TryGetTuple(tuplePattern, true, out tuple);
-	}
 
-	public object[] Rd(object?[] tuplePattern) {
-		return WaitTuple(tuplePattern, false);
-	}
-
-	public bool Rdp(object?[] tuplePattern, [MaybeNullWhen(false)] out object[] tuple) {
-		return TryGetTuple(tuplePattern, false, out tuple);
-	}
+	public bool Inp(object?[] tuplePattern, [MaybeNullWhen(false)] out object[] tuple) => TryGetTuple(tuplePattern, true, out tuple);
+	public bool Rdp(object?[] tuplePattern, [MaybeNullWhen(false)] out object[] tuple) => TryGetTuple(tuplePattern, false, out tuple);
 
 	public void EvalRegister(string key, string ironpythonCode) {
 		var url = $"eval/{key}";

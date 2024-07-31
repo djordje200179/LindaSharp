@@ -24,7 +24,7 @@ public class TupleJsonSerializer : JsonConverter<object?> {
 			else if (double.TryParse(doc.RootElement.GetRawText(), out var realNumber))
 				return realNumber;
 			else
-				throw new JsonException(string.Format("Cannot parse number {0}", doc.RootElement.ToString()));
+				throw new JsonException($"Cannot parse {doc.RootElement} as number");
 		}
 		case JsonTokenType.StartArray: {
 			var list = new ComparableList();
@@ -57,7 +57,7 @@ public class TupleJsonSerializer : JsonConverter<object?> {
 
 			throw new JsonException();
 		default:
-			throw new JsonException(string.Format("Unknown token {0}", reader.TokenType));
+			throw new JsonException($"Unknown token: {reader.TokenType}");
 		}
 	}
 

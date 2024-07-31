@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics.CodeAnalysis;
+using System.Threading.Channels;
 
 namespace LindaSharp;
 
@@ -7,11 +8,7 @@ public class LocalLinda : IActionEvalLinda, ISpaceViewLinda {
 
 	private readonly IList<object[]> tupleSpace = [];
 
-	private class WaitingTuple(object?[] tuplePattern) {
-		public object?[] TuplePattern { get; } = tuplePattern;
-		public object[]? Tuple { get; set; } = null;
-		public ManualResetEvent ConditionWaiter { get; } = new ManualResetEvent(false);
-	}
+	private record WaitingTuple(object?[] TuplePattern, ChannelWriter<object[]> Sender);
 
 	private readonly IList<WaitingTuple> inWaitingTuples = [];
 	private readonly IList<WaitingTuple> rdWaitingTuples = [];
@@ -21,7 +18,7 @@ public class LocalLinda : IActionEvalLinda, ISpaceViewLinda {
 			return false;
 
 		for (var i = 0; i < tuple.Length; i++) {
-			if (tuplePattern[i] is not null && !tuplePattern[i]!.Equals(tuple[i]))
+			if (tuplePattern[i] is not null && !tuplePattern[i].Equals(tuple[i]))
 				return false;
 		}
 
@@ -29,21 +26,21 @@ public class LocalLinda : IActionEvalLinda, ISpaceViewLinda {
 	}
 
 	private object[] WaitTuple(object?[] tuplePattern, bool removeFromSpace) {
-		WaitingTuple? waitingTuple;
+		ChannelReader<object[]> receiver;
 		lock (this) {
 			if (TryGetTuple(tuplePattern, removeFromSpace, out var foundedTuple))
 				return foundedTuple!;
 
-			waitingTuple = new WaitingTuple(tuplePattern);
+			var channel = Channel.CreateBounded<object[]>(1);
+			receiver = channel.Reader;
 
-			(removeFromSpace ? inWaitingTuples : rdWaitingTuples).Add(waitingTuple);
+			(removeFromSpace ? inWaitingTuples : rdWaitingTuples).Add(new WaitingTuple(tuplePattern, channel.Writer));
 		}
 
-		waitingTuple.ConditionWaiter.WaitOne();
-		ObjectDisposedException.ThrowIf(disposed, this);
-		waitingTuple.ConditionWaiter.Dispose();
+		var success = receiver.TryRead(out var tuple);
+		ObjectDisposedException.ThrowIf(!success, this);
 
-		return waitingTuple.Tuple!;
+		return tuple!;
 	}
 
 	private bool TryGetTuple(object?[] tuplePattern, bool removeFromSpace, [MaybeNullWhen(false)] out object[] tuple) {
@@ -62,26 +59,21 @@ public class LocalLinda : IActionEvalLinda, ISpaceViewLinda {
 
 	public void Out(object[] tuple) {
 		lock (this) {
-			foreach (var waitingTuple in rdWaitingTuples.Reverse()) {
+			foreach (var waitingTuple in rdWaitingTuples.Reverse()) { // TODO: Check reverse
 				if (!IsTupleCompatible(waitingTuple.TuplePattern, tuple))
 					continue;
 
-				waitingTuple.Tuple = (object[])tuple.Clone();
+				waitingTuple.Sender.TryWrite((object[])tuple.Clone());
 				rdWaitingTuples.Remove(waitingTuple);
-				waitingTuple.ConditionWaiter.Set();
-
 			}
 
 			var tupleInputted = false;
-
 			foreach (var waitingTuple in inWaitingTuples.Reverse()) {
 				if (!IsTupleCompatible(waitingTuple.TuplePattern, tuple))
 					continue;
 
-				waitingTuple.Tuple = (object[])tuple.Clone();
+				waitingTuple.Sender.TryWrite((object[])tuple.Clone());
 				inWaitingTuples.Remove(waitingTuple);
-				waitingTuple.ConditionWaiter.Set();
-
 				tupleInputted = true;
 
 				break;
@@ -107,10 +99,10 @@ public class LocalLinda : IActionEvalLinda, ISpaceViewLinda {
 		disposed = true;
 		GC.SuppressFinalize(this);
 
-		foreach (var waitingTuple in inWaitingTuples)
-			waitingTuple.ConditionWaiter.Set();
-		foreach (var waitingTuple in rdWaitingTuples)
-			waitingTuple.ConditionWaiter.Set();
+		//foreach (var waitingTuple in inWaitingTuples)
+		//	waitingTuple.ConditionWaiter.Set();
+		//foreach (var waitingTuple in rdWaitingTuples)
+		//	waitingTuple.ConditionWaiter.Set();
 	}
 
 	public IEnumerable<object[]> ReadAll() {
