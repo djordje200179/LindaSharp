@@ -29,5 +29,3 @@ for (var i = 2; i <= 100; i++) {
 }
 
 await remoteClient.Out(["done"]);
-
-Console.ReadKey();

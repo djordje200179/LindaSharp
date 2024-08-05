@@ -3,12 +3,11 @@
 namespace LindaSharp;
 
 public class LocalLinda : IActionEvalLinda, ISpaceViewLinda {
-	private readonly IList<object[]> tupleSpace = [];
+	private readonly List<object[]> tupleSpace = [];
 
 	private record WaitingTuple(object?[] Pattern, ChannelWriter<object[]> Sender);
 
-	private readonly IList<WaitingTuple> inWaitingTuples = [];
-	private readonly IList<WaitingTuple> rdWaitingTuples = [];
+	private readonly List<WaitingTuple> inWaitingTuples = [], rdWaitingTuples = [];
 
 	private static bool IsTupleCompatible(object?[] pattern, object[] tuple) {
 		if (tuple.Length != pattern.Length)
@@ -56,24 +55,23 @@ public class LocalLinda : IActionEvalLinda, ISpaceViewLinda {
 	public async Task Out(object[] tuple) {
 		var senders = new List<ChannelWriter<object[]>>();
 		lock (this) {
-			foreach (var waitingTuple in rdWaitingTuples.Reverse()) { // TODO: Check reverse
-				if (!IsTupleCompatible(waitingTuple.Pattern, tuple))
+			for (var i = rdWaitingTuples.Count - 1; i >= 0; i--) {
+				if (!IsTupleCompatible(rdWaitingTuples[i].Pattern, tuple))
 					continue;
 
-				senders.Add(waitingTuple.Sender);
-				rdWaitingTuples.Remove(waitingTuple);
+				senders.Add(rdWaitingTuples[i].Sender);
+				rdWaitingTuples.RemoveAt(i);
 			}
 
 			var tupleInputted = false;
-			foreach (var waitingTuple in inWaitingTuples.Reverse()) {
-				if (!IsTupleCompatible(waitingTuple.Pattern, tuple))
-					continue;
+			for (var i = inWaitingTuples.Count - 1; i >= 0; i--) {
+				if (IsTupleCompatible(inWaitingTuples[i].Pattern, tuple)) {
+					senders.Add(inWaitingTuples[i].Sender);
+					inWaitingTuples.RemoveAt(i);
+					tupleInputted = true;
 
-				senders.Add(waitingTuple.Sender);
-				inWaitingTuples.Remove(waitingTuple);
-				tupleInputted = true;
-
-				break;
+					break;
+				}
 			}
 
 			if (!tupleInputted)
