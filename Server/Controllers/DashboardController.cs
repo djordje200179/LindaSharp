@@ -6,7 +6,7 @@ namespace LindaSharp.Server.Controllers;
 public class DashboardController(SharedLinda linda) : Controller {
 	[HttpGet("")]
 	public async Task<IActionResult> Index() {
-		ViewBag.TupleSpace = await linda.ReadAll();
+		ViewBag.TupleSpace = await linda.QueryAll();
 		return View();
 	}
 }

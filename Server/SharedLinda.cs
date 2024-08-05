@@ -10,19 +10,19 @@ public class SharedLinda(IActionEvalLinda linda) : IScriptEvalLinda, ISpaceViewL
 	private readonly ScriptEngine pythonEngine = Python.CreateEngine();
 	private readonly IDictionary<string, string> evalScripts = new Dictionary<string, string>();
 
-	public Task Out(object[] tuple) => localLinda.Out(tuple);
+	public Task Put(object[] tuple) => localLinda.Put(tuple);
 
-	public Task<object[]> In(object?[] tuplePattern) => localLinda.In(tuplePattern);
-	public Task<object[]> Rd(object?[] tuplePattern) => localLinda.In(tuplePattern);
+	public Task<object[]> Get(object?[] pattern) => localLinda.Get(pattern);
+	public Task<object[]> Query(object?[] pattern) => localLinda.Get(pattern);
 
-	public Task<object[]?> Inp(object?[] tuplePattern) => localLinda.Inp(tuplePattern);
-	public Task<object[]?> Rdp(object?[] tuplePattern) => localLinda.Rdp(tuplePattern);
+	public Task<object[]?> TryGet(object?[] pattern) => localLinda.TryGet(pattern);
+	public Task<object[]?> TryQuery(object?[] pattern) => localLinda.TryQuery(pattern);
 
-	public async Task EvalRegister(string key, string ironpythonCode) {
+	public async Task RegisterScript(string key, string ironpythonCode) {
 		evalScripts[key] = ironpythonCode; // TODO: Fix concurrency
 	}
 
-	public async Task EvalInvoke(string key, object? parameter = null) {
+	public async Task InvokeScript(string key, object? parameter = null) {
 		var script = evalScripts[key];
 
 		var scope = pythonEngine.CreateScope();
@@ -33,7 +33,7 @@ public class SharedLinda(IActionEvalLinda linda) : IScriptEvalLinda, ISpaceViewL
 		thread.Start();
 	}
 
-	public async Task Eval(string ironpythonCode) {
+	public async Task EvalScript(string ironpythonCode) {
 		var scope = pythonEngine.CreateScope();
 		scope.SetVariable("linda", scriptLocalLinda);
 
@@ -41,7 +41,7 @@ public class SharedLinda(IActionEvalLinda linda) : IScriptEvalLinda, ISpaceViewL
 		thread.Start();
 	}
 
-	public async Task EvalFile(string ironpythonFilePath) {
+	public async Task EvalScriptFile(string ironpythonFilePath) {
 		var scope = pythonEngine.CreateScope();
 		scope.SetVariable("linda", scriptLocalLinda);
 
@@ -49,7 +49,7 @@ public class SharedLinda(IActionEvalLinda linda) : IScriptEvalLinda, ISpaceViewL
 		thread.Start();
 	}
 
-	public async Task<IEnumerable<object[]>> ReadAll() {
-		return localLinda is ISpaceViewLinda spaceViewLinda ? await spaceViewLinda.ReadAll() : throw new NotSupportedException();
+	public async Task<IEnumerable<object[]>> QueryAll() {
+		return localLinda is ISpaceViewLinda spaceViewLinda ? await spaceViewLinda.QueryAll() : throw new NotSupportedException();
 	}
 }

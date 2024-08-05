@@ -9,7 +9,7 @@ class LindaDisposedException(Exception):
 
 class RemoteLinda:
 	def __init__(self, host: str, port: int):
-		self.__base_url = f"http://{host}:{port}/"
+		self.__base_url = f"http://{host}:{port}/api/"
 		self.__actions_url = self.__base_url + "actions/"
 		self.__health_url = self.__base_url + "health/"
 
@@ -32,53 +32,53 @@ class RemoteLinda:
 
 		return response
 
-	def __wait_tuple(self, tuple_pattern: list, delete: bool) -> list:
+	def __wait_tuple(self, pattern: list, delete: bool) -> list:
 		method = "DELETE" if delete else "GET"
 		path = "in" if delete else "rd"
-		response = self.__send_json_request(method, path, tuple_pattern)
+		response = self.__send_json_request(method, path, pattern)
 		return response.json()
 
-	def __try_get_tuple(self, tuple_pattern: list, delete: bool) -> list:
+	def __try_get_tuple(self, pattern: list, delete: bool) -> (list | None):
 		method = "DELETE" if delete else "GET"
 		path = "in" if delete else "rd"
-		response = self.__send_json_request(method, path, tuple_pattern)
+		response = self.__send_json_request(method, path, pattern)
 
 		if response.status_code == requests.codes.not_found:
 			return None
 
 		return response.json()
 
-	def out(self, tuple: Sequence) -> None:
+	def put(self, *tuple) -> None:
 		self.__send_json_request("POST", "out", tuple)
 
-	def in_(self, tuple_pattern: Sequence) -> list:
-		return self.__wait_tuple(tuple_pattern, True)
+	def get(self, *pattern) -> list:
+		return self.__wait_tuple(pattern, True)
 
-	def rd(self, tuple_pattern: Sequence) -> list:
-		return self.__wait_tuple(tuple_pattern, False)
+	def query(self, *pattern) -> list:
+		return self.__wait_tuple(pattern, False)
 
-	def inp(self, tuple_pattern: Sequence) -> list:
-		return self.__try_get_tuple(tuple_pattern, True)
+	def try_get(self, *pattern) -> (list | None):
+		return self.__try_get_tuple(pattern, True)
 
-	def rdp(self, tuple_pattern: Sequence) -> list:
-		return self.__try_get_tuple(tuple_pattern, False)
+	def try_query(self, *pattern) -> (list | None):
+		return self.__try_get_tuple(pattern, False)
 
-	def eval_register(self, key: str, ironpython_code: str) -> None:
+	def register_script(self, key: str, ironpython_code: str) -> None:
 		self.__send_text_request("PUT", f"eval/{key}", ironpython_code, "text/ironpython")
 
-	def eval_register_file(self, key: str, ironpython_file_path: str) -> None:
+	def register_script_file(self, key: str, ironpython_file_path: str) -> None:
 		with open(ironpython_file_path, "r") as file:
 			file_content = file.read()
 
 		self.eval_register(key, file_content)
 
-	def eval_invoke(self, key: str, parameter: Any = None) -> None:
+	def invoke_script(self, key: str, parameter: Any = None) -> None:
 		self.__send_json_request("POST", f"eval/{key}", parameter)
 
-	def eval(self, ironpython_code: str) -> None:
+	def eval_script(self, ironpython_code: str) -> None:
 		self.__send_text_request("POST", "eval", ironpython_code, "text/ironpython")
 
-	def eval_file(self, ironpython_file_path: str) -> None:
+	def eval_script_file(self, ironpython_file_path: str) -> None:
 		with open(ironpython_file_path, "r") as file:
 			file_content = file.read()
 

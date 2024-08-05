@@ -9,7 +9,7 @@ public class ActionsController(SharedLinda linda) : ControllerBase {
 	[HttpPost("out")]
 	public async Task<IActionResult> Out([FromBody] object[] tuple) {
 		try {
-			await linda.Out(tuple);
+			await linda.Put(tuple);
 		} catch (Exception) {
 			return StatusCode((int)HttpStatusCode.InternalServerError);
 		}
@@ -20,7 +20,7 @@ public class ActionsController(SharedLinda linda) : ControllerBase {
 	[HttpDelete("in")]
 	public async Task<IActionResult> In([FromBody] object?[] pattern) {
 		try {
-			var tuple = await linda.In(pattern);
+			var tuple = await linda.Get(pattern);
 
 			return Ok(tuple);
 		} catch (Exception) {
@@ -31,7 +31,7 @@ public class ActionsController(SharedLinda linda) : ControllerBase {
 	[HttpGet("rd")]
 	public async Task<IActionResult> Rd([FromBody] object?[] pattern) {
 		try {
-			var tuple = await linda.Rd(pattern);
+			var tuple = await linda.Query(pattern);
 
 			return Ok(tuple);
 		} catch (Exception) {
@@ -42,7 +42,7 @@ public class ActionsController(SharedLinda linda) : ControllerBase {
 	[HttpDelete("inp")]
 	public async Task<IActionResult> Inp([FromBody] object?[] pattern) {
 		try {
-			var tuple = await linda.Inp(pattern);
+			var tuple = await linda.TryGet(pattern);
 
 			return tuple != null ? Ok(tuple) : NotFound();
 		} catch (Exception) {
@@ -53,7 +53,7 @@ public class ActionsController(SharedLinda linda) : ControllerBase {
 	[HttpGet("rdp")]
 	public async Task<IActionResult> Rdp([FromBody] object?[] pattern) {
 		try {
-			var tuple = await linda.Rdp(pattern);
+			var tuple = await linda.TryQuery(pattern);
 
 			return tuple != null ? Ok(tuple) : NotFound();
 		} catch (Exception) {
@@ -75,7 +75,7 @@ public class ActionsController(SharedLinda linda) : ControllerBase {
 			return BadRequest();
 		}
 
-		await linda.Eval(await reader.ReadToEndAsync());
+		await linda.EvalScript(await reader.ReadToEndAsync());
 
 		return Ok();
 	}
@@ -94,7 +94,7 @@ public class ActionsController(SharedLinda linda) : ControllerBase {
 			return BadRequest();
 		}
 
-		await linda.EvalRegister(key, await reader.ReadToEndAsync());
+		await linda.RegisterScript(key, await reader.ReadToEndAsync());
 
 		return Ok();
 	}
@@ -102,7 +102,7 @@ public class ActionsController(SharedLinda linda) : ControllerBase {
 	[HttpPost("eval/{key}")]
 	public async Task<IActionResult> EvalInvoke(string key, [FromBody] object? parameter) {
 		try {
-			await linda.EvalInvoke(key, parameter);
+			await linda.InvokeScript(key, parameter);
 		} catch (KeyNotFoundException) {
 			return NotFound();
 		}

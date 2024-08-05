@@ -35,12 +35,12 @@ public class RemoteLinda(string host, ushort port) : IScriptEvalLinda, IDisposab
 		}
 	}
 
-	private async Task<object[]> WaitTuple(object?[] tuplePattern, bool delete) {
+	private async Task<object[]> WaitTuple(object?[] pattern, bool delete) {
 		using var request = new HttpRequestMessage(
 			delete ? HttpMethod.Delete : HttpMethod.Get,
 			delete ? "in" : "rd"
 		) {
-			Content = JsonContent.Create(tuplePattern, options: serializationOptions)
+			Content = JsonContent.Create(pattern, options: serializationOptions)
 		};
 
 		using var response = await SendRequest(request);
@@ -48,12 +48,12 @@ public class RemoteLinda(string host, ushort port) : IScriptEvalLinda, IDisposab
 		return await response.Content.ReadFromJsonAsync<object[]>(serializationOptions);
 	}
 
-	private async Task<object[]?> TryGetTuple(object?[] tuplePattern, bool delete) {
+	private async Task<object[]?> TryGetTuple(object?[] pattern, bool delete) {
 		using var request = new HttpRequestMessage(
 			delete ? HttpMethod.Delete : HttpMethod.Get, 
 			delete ? "inp" : "rdp"
 		) {
-			Content = JsonContent.Create(tuplePattern, options: serializationOptions)
+			Content = JsonContent.Create(pattern, options: serializationOptions)
 		};
 
 		using var response = await SendRequest(request);
@@ -64,7 +64,7 @@ public class RemoteLinda(string host, ushort port) : IScriptEvalLinda, IDisposab
 		return await response.Content.ReadFromJsonAsync<object[]>(serializationOptions);
 	}
 
-	public async Task Out(object[] tuple) {
+	public async Task Put(params object[] tuple) {
 		var request = new HttpRequestMessage(HttpMethod.Post, "out") {
 			Content = JsonContent.Create(tuple, options: serializationOptions)
 		};
@@ -73,14 +73,14 @@ public class RemoteLinda(string host, ushort port) : IScriptEvalLinda, IDisposab
 		response.EnsureSuccessStatusCode();
 	}
 
-	public Task<object[]> In(object?[] tuplePattern) => WaitTuple(tuplePattern, true);
-	public Task<object[]> Rd(object?[] tuplePattern) => WaitTuple(tuplePattern, false);
+	public Task<object[]> Get(params object?[] pattern) => WaitTuple(pattern, true);
+	public Task<object[]> Query(params object?[] pattern) => WaitTuple(pattern, false);
 
 
-	public Task<object[]?> Inp(object?[] tuplePattern) => TryGetTuple(tuplePattern, true);
-	public Task<object[]?> Rdp(object?[] tuplePattern) => TryGetTuple(tuplePattern, false);
+	public Task<object[]?> TryGet(params object?[] pattern) => TryGetTuple(pattern, true);
+	public Task<object[]?> TryQuery(params object?[] pattern) => TryGetTuple(pattern, false);
 
-	public async Task EvalRegister(string key, string ironpythonCode) {
+	public async Task RegisterScript(string key, string ironpythonCode) {
 		var request = new HttpRequestMessage(HttpMethod.Put, $"eval/{key}") {
 			Content = new StringContent(ironpythonCode, MediaTypeHeaderValue.Parse("text/ironpython"))
 		};
@@ -89,7 +89,7 @@ public class RemoteLinda(string host, ushort port) : IScriptEvalLinda, IDisposab
 		response.EnsureSuccessStatusCode();
 	}
 
-	public async Task EvalInvoke(string key, object? parameter = null) {
+	public async Task InvokeScript(string key, object? parameter = null) {
 		var request = new HttpRequestMessage(HttpMethod.Post, $"eval/{key}") {
 			Content = JsonContent.Create(parameter, options: serializationOptions)
 		};
@@ -99,7 +99,7 @@ public class RemoteLinda(string host, ushort port) : IScriptEvalLinda, IDisposab
 	}
 
 
-	public async Task Eval(string ironpythonCode) {
+	public async Task EvalScript(string ironpythonCode) {
 		var request = new HttpRequestMessage(HttpMethod.Post, "eval") {
 			Content = new StringContent(ironpythonCode, MediaTypeHeaderValue.Parse("text/ironpython"))
 		};

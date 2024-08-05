@@ -1,21 +1,20 @@
 ﻿while True:
-	if linda.rdp(("done", )):
+	if linda.try_query("done"):
 		break
 	
-	a_tuple = linda.in_(("a", None))
-	b_tuple = linda.in_(("b", None))
-	ind_tuple = linda.in_(("ind", None))
+	a_tuple = linda.get("a", None)
+	b_tuple = linda.get("b", None)
+	ind_tuple = linda.get("ind", None)
 
 	a = a_tuple[1]
 	b = b_tuple[1]
 	ind = ind_tuple[1]
 
 	ind += 1
-
 	c = a + b
 
-	linda.out(("fib", ind, c))
+	linda.put("fib", ind, c)
 
-	linda.out(("a", b))
-	linda.out(("b", c))
-	linda.out(("ind", ind))
+	linda.put("a", b)
+	linda.put("b", c)
+	linda.put("ind", ind)

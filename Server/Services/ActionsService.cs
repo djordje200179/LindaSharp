@@ -15,7 +15,7 @@ public class ActionsService(SharedLinda linda) : Actions.ActionsBase {
 	}
 
 	public override Task<Empty> Out(LindaTuple request, ServerCallContext context) {
-		linda.Out(request.Fields.ToArray());
+		linda.Put(request.Fields.ToArray());
 		return Task.FromResult(new Empty());
 	}
 

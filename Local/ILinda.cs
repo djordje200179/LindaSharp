@@ -1,13 +1,13 @@
 ﻿namespace LindaSharp;
 
 public interface ILinda {
-	public Task Out(object[] tuple);
+	public Task Put(params object[] tuple);
 
-	public Task<object[]> In(object?[] tuplePattern);
-	public Task<object[]> Rd(object?[] tuplePattern);
+	public Task<object[]> Get(params object?[] pattern);
+	public Task<object[]> Query(params object?[] pattern);
 
-	public Task<object[]?> Inp(object?[] tuplePattern);
-	public Task<object[]?> Rdp(object?[] tuplePattern);
+	public Task<object[]?> TryGet(params object?[] pattern);
+	public Task<object[]?> TryQuery(params object?[] pattern);
 }
 
 public interface IActionEvalLinda : ILinda {
@@ -15,14 +15,14 @@ public interface IActionEvalLinda : ILinda {
 }
 
 public interface IScriptEvalLinda : ILinda {
-	public Task EvalRegister(string key, string ironpythonCode);
-	public Task EvalInvoke(string key, object? parameter = null);
-	public Task Eval(string ironpythonCode);
+	public Task RegisterScript(string key, string ironpythonCode);
+	public Task InvokeScript(string key, object? parameter = null);
+	public Task EvalScript(string ironpythonCode);
 
-	public Task EvalRegisterFile(string key, string ironpythonFilePath) => EvalRegister(key, File.ReadAllText(ironpythonFilePath));
-	public Task EvalFile(string ironpythonFilePath) => Eval(File.ReadAllText(ironpythonFilePath));
+	public Task RegisterScriptFile(string key, string ironpythonFilePath) => RegisterScript(key, File.ReadAllText(ironpythonFilePath));
+	public Task EvalScriptFile(string ironpythonFilePath) => EvalScript(File.ReadAllText(ironpythonFilePath));
 }
 
 public interface ISpaceViewLinda : ILinda {
-	public Task<IEnumerable<object[]>> ReadAll();
+	public Task<IEnumerable<object[]>> QueryAll();
 }
