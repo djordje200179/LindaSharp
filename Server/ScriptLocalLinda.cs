@@ -1,4 +1,5 @@
 ﻿using IronPython.Runtime.Operations;
+
 namespace LindaSharp.Server;
 
 public class ScriptLocalLinda(IActionEvalLinda linda) {
@@ -9,41 +10,21 @@ public class ScriptLocalLinda(IActionEvalLinda linda) {
 		}).ToArray();
 	}
 
+	// TODO: change to async/await
+	private static T RunTask<T>(Task<T> task) {
+		task.Wait();
+		return task.Result;
+	}
+
 #pragma warning disable IDE1006 // Naming Styles
-	public void @out(object[] tuple) {
-		var reformattedTuple = ReformatTuple(tuple);
+	public void @out(object[] tuple) => linda.Out(ReformatTuple(tuple)!);
 
-		linda.Out(reformattedTuple);
-	}
+	public object[] in_(object?[] pattern) => RunTask(linda.In(ReformatTuple(pattern)));
+	public object[] rd(object[] pattern) => RunTask(linda.Rd(ReformatTuple(pattern)));
 
-	public object[] in_(object?[] tuple_pattern) {
-		var reformattedTuplePattern = ReformatTuple(tuple_pattern);
+	public object[]? inp(object?[] pattern) => RunTask(linda.Inp(ReformatTuple(pattern)));
+	public object[]? rdp(object?[] pattern) => RunTask(linda.Rdp(ReformatTuple(pattern)));
 
-		return linda.In(reformattedTuplePattern);
-	}
-
-	public object[] rd(object[] tuple_pattern) {
-		var reformattedTuplePattern = ReformatTuple(tuple_pattern);
-
-		return linda.Rd(reformattedTuplePattern);
-	}
-
-	public object[]? inp(object?[] tuple_pattern) {
-		var reformattedTuplePattern = ReformatTuple(tuple_pattern);
-
-		linda.Inp(reformattedTuplePattern, out var tuple);
-		return tuple;
-	}
-
-	public object[]? rdp(object?[] tuple_pattern) {
-		var reformattedTuplePattern = ReformatTuple(tuple_pattern);
-
-		linda.Rdp(reformattedTuplePattern, out var tuple);
-		return tuple;
-	}
-
-	public void eval(Action<ILinda> function) {
-		linda.Eval(function);
-	}
+	public void eval(Action<ILinda> function) => linda.Eval(function);
 #pragma warning restore IDE1006 // Naming Styles
 }

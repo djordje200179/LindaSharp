@@ -1,78 +1,75 @@
-﻿using System.Diagnostics.CodeAnalysis;
-using System.Threading.Channels;
+﻿using System.Threading.Channels;
 
 namespace LindaSharp;
 
 public class LocalLinda : IActionEvalLinda, ISpaceViewLinda {
-	private volatile bool disposed = false;
-
 	private readonly IList<object[]> tupleSpace = [];
 
-	private record WaitingTuple(object?[] TuplePattern, ChannelWriter<object[]> Sender);
+	private record WaitingTuple(object?[] Pattern, ChannelWriter<object[]> Sender);
 
 	private readonly IList<WaitingTuple> inWaitingTuples = [];
 	private readonly IList<WaitingTuple> rdWaitingTuples = [];
 
-	private static bool IsTupleCompatible(object?[] tuplePattern, object[] tuple) {
-		if (tuple.Length != tuplePattern.Length)
+	private static bool IsTupleCompatible(object?[] pattern, object[] tuple) {
+		if (tuple.Length != pattern.Length)
 			return false;
 
 		for (var i = 0; i < tuple.Length; i++) {
-			if (tuplePattern[i] is not null && !tuplePattern[i].Equals(tuple[i]))
+			if (pattern[i] is object field && !field.Equals(tuple[i]))
 				return false;
 		}
 
 		return true;
 	}
 
-	private object[] WaitTuple(object?[] tuplePattern, bool removeFromSpace) {
+	private async Task<object[]> WaitTuple(object?[] tuplePattern, bool removeFromSpace) {
 		ChannelReader<object[]> receiver;
 		lock (this) {
-			if (TryGetTuple(tuplePattern, removeFromSpace, out var foundedTuple))
-				return foundedTuple!;
+			if (TryGetTuple(tuplePattern, removeFromSpace) is object[] existingTuple)
+				return existingTuple;
 
-			var channel = Channel.CreateBounded<object[]>(1);
+			var channel = Channel.CreateBounded<object[]>(new BoundedChannelOptions(1) {
+				SingleReader = true,
+				SingleWriter = true,
+			});
 			receiver = channel.Reader;
 
 			(removeFromSpace ? inWaitingTuples : rdWaitingTuples).Add(new WaitingTuple(tuplePattern, channel.Writer));
 		}
 
-		var success = receiver.TryRead(out var tuple);
-		ObjectDisposedException.ThrowIf(!success, this);
-
-		return tuple!;
+		return await receiver.ReadAsync();
 	}
 
-	private bool TryGetTuple(object?[] tuplePattern, bool removeFromSpace, [MaybeNullWhen(false)] out object[] tuple) {
+	private object[]? TryGetTuple(object?[] tuplePattern, bool removeFromSpace) {
 		lock (this) {
-			tuple = tupleSpace.FirstOrDefault(tuple => IsTupleCompatible(tuplePattern, tuple));
-
+			var tuple = tupleSpace.FirstOrDefault(tuple => IsTupleCompatible(tuplePattern, tuple));
 			if (tuple is null)
-				return false;
+				return null;
 
 			if (removeFromSpace)
 				tupleSpace.Remove(tuple);
-		}
 
-		return true;
+			return tuple;
+		}
 	}
 
-	public void Out(object[] tuple) {
+	public async Task Out(object[] tuple) {
+		var senders = new List<ChannelWriter<object[]>>();
 		lock (this) {
 			foreach (var waitingTuple in rdWaitingTuples.Reverse()) { // TODO: Check reverse
-				if (!IsTupleCompatible(waitingTuple.TuplePattern, tuple))
+				if (!IsTupleCompatible(waitingTuple.Pattern, tuple))
 					continue;
 
-				waitingTuple.Sender.TryWrite((object[])tuple.Clone());
+				senders.Add(waitingTuple.Sender);
 				rdWaitingTuples.Remove(waitingTuple);
 			}
 
 			var tupleInputted = false;
 			foreach (var waitingTuple in inWaitingTuples.Reverse()) {
-				if (!IsTupleCompatible(waitingTuple.TuplePattern, tuple))
+				if (!IsTupleCompatible(waitingTuple.Pattern, tuple))
 					continue;
 
-				waitingTuple.Sender.TryWrite((object[])tuple.Clone());
+				senders.Add(waitingTuple.Sender);
 				inWaitingTuples.Remove(waitingTuple);
 				tupleInputted = true;
 
@@ -82,30 +79,22 @@ public class LocalLinda : IActionEvalLinda, ISpaceViewLinda {
 			if (!tupleInputted)
 				tupleSpace.Add((object[])tuple.Clone());
 		}
+
+		foreach (var sender in senders)
+			await sender.WriteAsync((object[])tuple.Clone());
 	}
 
-	public object[] In(object?[] tuplePattern) => WaitTuple(tuplePattern, true);
-	public object[] Rd(object?[] tuplePattern) => WaitTuple(tuplePattern, false);
+	public Task<object[]> In(object?[] tuplePattern) => WaitTuple(tuplePattern, true);
+	public Task<object[]> Rd(object?[] tuplePattern) => WaitTuple(tuplePattern, false);
 
-	public bool Inp(object?[] tuplePattern, [MaybeNullWhen(false)] out object[] tuple) => TryGetTuple(tuplePattern, true, out tuple);
-	public bool Rdp(object?[] tuplePattern, [MaybeNullWhen(false)] out object[] tuple) => TryGetTuple(tuplePattern, false, out tuple);
+	public async Task<object[]?> Inp(object?[] tuplePattern) => TryGetTuple(tuplePattern, true);
+	public async Task<object[]?> Rdp(object?[] tuplePattern) => TryGetTuple(tuplePattern, false);
 
 	public void Eval(Action<IActionEvalLinda> func) => new Thread(() => func(this)).Start();
 
-	public void Dispose() {
-		if (disposed)
-			return;
-
-		disposed = true;
-		GC.SuppressFinalize(this);
-
-		//foreach (var waitingTuple in inWaitingTuples)
-		//	waitingTuple.ConditionWaiter.Set();
-		//foreach (var waitingTuple in rdWaitingTuples)
-		//	waitingTuple.ConditionWaiter.Set();
-	}
-
-	public IEnumerable<object[]> ReadAll() {
-		return tupleSpace.Select(tuple => (object[])tuple.Clone()).ToList();
+	public async Task<IEnumerable<object[]>> ReadAll() {
+		lock (this) {
+			return tupleSpace.Select(tuple => (object[])tuple.Clone());
+		}
 	}
 }

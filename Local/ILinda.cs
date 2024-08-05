@@ -1,21 +1,28 @@
-﻿using System.Diagnostics.CodeAnalysis;
+﻿namespace LindaSharp;
 
-namespace LindaSharp;
+public interface ILinda {
+	public Task Out(object[] tuple);
 
-public interface ILinda : IDisposable {
-	public void Out(object[] tuple);
+	public Task<object[]> In(object?[] tuplePattern);
+	public Task<object[]> Rd(object?[] tuplePattern);
 
-	public object[] In(object?[] tuplePattern);
-	public object[] Rd(object?[] tuplePattern);
-
-	public bool Inp(object?[] tuplePattern, [MaybeNullWhen(false)] out object[] tuple);
-	public bool Rdp(object?[] tuplePattern, [MaybeNullWhen(false)] out object[] tuple);
+	public Task<object[]?> Inp(object?[] tuplePattern);
+	public Task<object[]?> Rdp(object?[] tuplePattern);
 }
 
 public interface IActionEvalLinda : ILinda {
 	public void Eval(Action<IActionEvalLinda> func);
 }
 
+public interface IScriptEvalLinda : ILinda {
+	public Task EvalRegister(string key, string ironpythonCode);
+	public Task EvalInvoke(string key, object? parameter = null);
+	public Task Eval(string ironpythonCode);
+
+	public Task EvalRegisterFile(string key, string ironpythonFilePath) => EvalRegister(key, File.ReadAllText(ironpythonFilePath));
+	public Task EvalFile(string ironpythonFilePath) => Eval(File.ReadAllText(ironpythonFilePath));
+}
+
 public interface ISpaceViewLinda : ILinda {
-	public IEnumerable<object[]> ReadAll();
+	public Task<IEnumerable<object[]>> ReadAll();
 }

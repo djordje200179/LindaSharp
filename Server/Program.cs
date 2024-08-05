@@ -4,10 +4,11 @@ using LindaSharp.Server.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
+var linda = new SharedLinda(new LocalLinda());
+
 builder.Services.AddGrpc();
 
-builder.Services
-	.AddSingleton(new SharedLinda(new LocalLinda()));
+builder.Services.AddSingleton(linda);
 
 builder.Services
 	.AddControllersWithViews()

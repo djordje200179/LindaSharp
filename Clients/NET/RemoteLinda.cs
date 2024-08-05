@@ -1,5 +1,4 @@
 ﻿using LindaSharp.Server;
-using System.Diagnostics.CodeAnalysis;
 using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
@@ -7,7 +6,7 @@ using System.Text.Json;
 
 namespace LindaSharp.Client;
 
-public class RemoteLinda(string host, ushort port) : ILinda {
+public class RemoteLinda(string host, ushort port) : IScriptEvalLinda, IDisposable {
 	private readonly HttpClient actionsHttpClient = new() {
 		BaseAddress = new Uri($"http://{host}:{port}/api/actions/"),
 		Timeout = Timeout.InfiniteTimeSpan
@@ -25,131 +24,100 @@ public class RemoteLinda(string host, ushort port) : ILinda {
 		WriteIndented = true
 	};
 
-	private HttpResponseMessage SendRequest(HttpRequestMessage request) {
-		HttpResponseMessage response;
+	private async Task<HttpResponseMessage> SendRequest(HttpRequestMessage request) {
 		try {
-			using var requestTask = actionsHttpClient.SendAsync(request, cancellationTokenSource.Token);
-			requestTask.Wait();
-			response = requestTask.Result;
+			var response = await actionsHttpClient.SendAsync(request, cancellationTokenSource.Token);
+			ObjectDisposedException.ThrowIf(response.StatusCode == HttpStatusCode.InternalServerError, this);
+
+			return response;
 		} catch (TaskCanceledException) {
 			throw new ObjectDisposedException(nameof(RemoteLinda));
 		}
-
-		ObjectDisposedException.ThrowIf(response.StatusCode == HttpStatusCode.InternalServerError, this);
-
-		return response;
 	}
 
-	private static object[] ReadTuple(HttpResponseMessage response) {
-		var decodingTask = Task.Run(() => response.Content.ReadFromJsonAsync<object[]>(serializationOptions));
-		decodingTask.Wait();
-		return decodingTask.Result!;
-	}
-
-	private object[] WaitTuple(object?[] tuplePattern, bool delete) {
-		var request = new HttpRequestMessage(
+	private async Task<object[]> WaitTuple(object?[] tuplePattern, bool delete) {
+		using var request = new HttpRequestMessage(
 			delete ? HttpMethod.Delete : HttpMethod.Get,
 			delete ? "in" : "rd"
 		) {
 			Content = JsonContent.Create(tuplePattern, options: serializationOptions)
 		};
 
-		using var response = SendRequest(request);
+		using var response = await SendRequest(request);
 
-		return ReadTuple(response);
+		return await response.Content.ReadFromJsonAsync<object[]>(serializationOptions);
 	}
 
-	private bool TryGetTuple(object?[] tuplePattern, bool delete, [MaybeNullWhen(false)] out object[] tuple) {
-		var request = new HttpRequestMessage(
+	private async Task<object[]?> TryGetTuple(object?[] tuplePattern, bool delete) {
+		using var request = new HttpRequestMessage(
 			delete ? HttpMethod.Delete : HttpMethod.Get, 
 			delete ? "inp" : "rdp"
 		) {
 			Content = JsonContent.Create(tuplePattern, options: serializationOptions)
 		};
 
-		using var response = SendRequest(request);
+		using var response = await SendRequest(request);
 
-		if (response.StatusCode == HttpStatusCode.NotFound) {
-			tuple = null;
-			return false;
-		} else {
-			tuple = ReadTuple(response);
-			return true;
-		}
+		if (response.StatusCode == HttpStatusCode.NotFound)
+			return null;
+
+		return await response.Content.ReadFromJsonAsync<object[]>(serializationOptions);
 	}
 
-	public void Out(object[] tuple) {
+	public async Task Out(object[] tuple) {
 		var request = new HttpRequestMessage(HttpMethod.Post, "out") {
 			Content = JsonContent.Create(tuple, options: serializationOptions)
 		};
 
-		using var response = SendRequest(request);
+		using var response = await SendRequest(request);
 		response.EnsureSuccessStatusCode();
 	}
 
-	public object[] In(object?[] tuplePattern) => WaitTuple(tuplePattern, true);
-	public object[] Rd(object?[] tuplePattern) => WaitTuple(tuplePattern, false);
+	public Task<object[]> In(object?[] tuplePattern) => WaitTuple(tuplePattern, true);
+	public Task<object[]> Rd(object?[] tuplePattern) => WaitTuple(tuplePattern, false);
 
 
-	public bool Inp(object?[] tuplePattern, [MaybeNullWhen(false)] out object[] tuple) => TryGetTuple(tuplePattern, true, out tuple);
-	public bool Rdp(object?[] tuplePattern, [MaybeNullWhen(false)] out object[] tuple) => TryGetTuple(tuplePattern, false, out tuple);
+	public Task<object[]?> Inp(object?[] tuplePattern) => TryGetTuple(tuplePattern, true);
+	public Task<object[]?> Rdp(object?[] tuplePattern) => TryGetTuple(tuplePattern, false);
 
-	public void EvalRegister(string key, string ironpythonCode) {
-		var url = $"eval/{key}";
-
-		var request = new HttpRequestMessage(HttpMethod.Put, url) {
+	public async Task EvalRegister(string key, string ironpythonCode) {
+		var request = new HttpRequestMessage(HttpMethod.Put, $"eval/{key}") {
 			Content = new StringContent(ironpythonCode, MediaTypeHeaderValue.Parse("text/ironpython"))
 		};
 
-		using var response = SendRequest(request);
+		using var response = await SendRequest(request);
 		response.EnsureSuccessStatusCode();
 	}
 
-	public void EvalRegisterFile(string key, string ironpythonFilePath) {
-		var content = File.ReadAllText(ironpythonFilePath);
-		EvalRegister(key, content);
-	}
-
-	public void EvalInvoke(string key, object? parameter = null) {
-		var url = $"eval/{key}";
-
-		var request = new HttpRequestMessage(HttpMethod.Post, url) {
+	public async Task EvalInvoke(string key, object? parameter = null) {
+		var request = new HttpRequestMessage(HttpMethod.Post, $"eval/{key}") {
 			Content = JsonContent.Create(parameter, options: serializationOptions)
 		};
 
-		using var response = SendRequest(request);
+		using var response = await SendRequest(request);
 		response.EnsureSuccessStatusCode();
 	}
 
 
-	public void Eval(string ironpythonCode) {
+	public async Task Eval(string ironpythonCode) {
 		var request = new HttpRequestMessage(HttpMethod.Post, "eval") {
 			Content = new StringContent(ironpythonCode, MediaTypeHeaderValue.Parse("text/ironpython"))
 		};
 
-		using var response = SendRequest(request);
+		using var response = await SendRequest(request);
 		response.EnsureSuccessStatusCode();
 	}
 
-	public void EvalFile(string ironpythonFilePath) {
-		var content = File.ReadAllText(ironpythonFilePath);
-		Eval(content);
-	}
-
 	public void Dispose() {
-		GC.SuppressFinalize(this);
-
 		cancellationTokenSource.Cancel();
 		cancellationTokenSource.Dispose();
 		actionsHttpClient.Dispose();
+		healthHttpClient.Dispose();
 	}
 
-	public bool IsHealthy() {
+	public async Task<bool> IsHealthy() {
 		try {
-			var requestTask = healthHttpClient.GetAsync("ping");
-			requestTask.Wait();
-			using var response = requestTask.Result;
-
+			using var response = await healthHttpClient.GetAsync("ping", cancellationTokenSource.Token);
 			return response.IsSuccessStatusCode;
 		} catch (Exception) {
 			return false;

@@ -7,10 +7,10 @@ namespace LindaSharp.Server.Controllers;
 [ApiController]
 public class ActionsController(SharedLinda linda) : ControllerBase {
 	[HttpPost("out")]
-	public IActionResult Out([FromBody] object[] tuple) {
+	public async Task<IActionResult> Out([FromBody] object[] tuple) {
 		try {
-			linda.Out(tuple);
-		} catch (ObjectDisposedException) {
+			await linda.Out(tuple);
+		} catch (Exception) {
 			return StatusCode((int)HttpStatusCode.InternalServerError);
 		}
 
@@ -18,51 +18,51 @@ public class ActionsController(SharedLinda linda) : ControllerBase {
 	}
 
 	[HttpDelete("in")]
-	public IActionResult In([FromBody] object?[] tuplePattern) {
+	public async Task<IActionResult> In([FromBody] object?[] pattern) {
 		try {
-			var tuple = linda.In(tuplePattern);
+			var tuple = await linda.In(pattern);
 
 			return Ok(tuple);
-		} catch (ObjectDisposedException) {
+		} catch (Exception) {
 			return StatusCode((int)HttpStatusCode.InternalServerError);
 		}
 	}
 
 	[HttpGet("rd")]
-	public IActionResult Rd([FromBody] object?[] tuplePattern) {
+	public async Task<IActionResult> Rd([FromBody] object?[] pattern) {
 		try {
-			var tuple = linda.Rd(tuplePattern);
+			var tuple = await linda.Rd(pattern);
 
 			return Ok(tuple);
-		} catch (ObjectDisposedException) {
+		} catch (Exception) {
 			return StatusCode((int)HttpStatusCode.InternalServerError);
 		}
 	}
 
 	[HttpDelete("inp")]
-	public IActionResult Inp([FromBody] object?[] tuplePattern) {
+	public async Task<IActionResult> Inp([FromBody] object?[] pattern) {
 		try {
-			var status = linda.Inp(tuplePattern, out var tuple);
+			var tuple = await linda.Inp(pattern);
 
-			return status ? Ok(tuple) : NotFound();
-		} catch (ObjectDisposedException) {
+			return tuple != null ? Ok(tuple) : NotFound();
+		} catch (Exception) {
 			return StatusCode((int)HttpStatusCode.InternalServerError);
 		}
 	}
 
 	[HttpGet("rdp")]
-	public IActionResult Rdp([FromBody] object?[] tuplePattern) {
+	public async Task<IActionResult> Rdp([FromBody] object?[] pattern) {
 		try {
-			var status = linda.Rdp(tuplePattern, out var tuple);
+			var tuple = await linda.Rdp(pattern);
 
-			return status ? Ok(tuple) : NotFound();
-		} catch (ObjectDisposedException) {
+			return tuple != null ? Ok(tuple) : NotFound();
+		} catch (Exception) {
 			return StatusCode((int)HttpStatusCode.InternalServerError);
 		}
 	}
 
 	[HttpPost("eval")]
-	public IActionResult Eval() {
+	public async Task<IActionResult> Eval() {
 		var request = HttpContext.Request;
 
 		StreamReader reader;
@@ -75,17 +75,13 @@ public class ActionsController(SharedLinda linda) : ControllerBase {
 			return BadRequest();
 		}
 
-		var codeReadingTask = reader.ReadToEndAsync();
-		codeReadingTask.Wait();
-		var ironpythonCode = codeReadingTask.Result;
-
-		linda.Eval(ironpythonCode);
+		await linda.Eval(await reader.ReadToEndAsync());
 
 		return Ok();
 	}
 
 	[HttpPut("eval/{key}")]
-	public IActionResult EvalRegister(string key) {
+	public async Task<IActionResult> EvalRegister(string key) {
 		var request = HttpContext.Request;
 
 		StreamReader reader;
@@ -98,19 +94,15 @@ public class ActionsController(SharedLinda linda) : ControllerBase {
 			return BadRequest();
 		}
 
-		var codeReadingTask = reader.ReadToEndAsync();
-		codeReadingTask.Wait();
-		var ironpythonCode = codeReadingTask.Result;
-
-		linda.EvalRegister(key, ironpythonCode);
+		await linda.EvalRegister(key, await reader.ReadToEndAsync());
 
 		return Ok();
 	}
 
 	[HttpPost("eval/{key}")]
-	public IActionResult EvalInvoke(string key, [FromBody] object? parameter) {
+	public async Task<IActionResult> EvalInvoke(string key, [FromBody] object? parameter) {
 		try {
-			linda.EvalInvoke(key, parameter);
+			await linda.EvalInvoke(key, parameter);
 		} catch (KeyNotFoundException) {
 			return NotFound();
 		}
