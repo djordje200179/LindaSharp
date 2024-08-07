@@ -2,10 +2,15 @@
 
 namespace LindaSharp.Server.Types;
 
-internal class ComparableList: List<object?>, IEquatable<ComparableList> {
+internal class ComparableList : List<object?>, IEquatable<ComparableList> {
+	public ComparableList() { }
+	public ComparableList(IEnumerable<object?> collection) : base(collection) { }
+
 	public override bool Equals(object? other) {
 		return other is ComparableList otherList && Equals(otherList);
 	}
+
+	public override int GetHashCode() => base.GetHashCode();
 
 	public bool Equals(ComparableList? other) {
 		if (other is null)

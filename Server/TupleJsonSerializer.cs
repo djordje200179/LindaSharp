@@ -5,7 +5,7 @@ using System.Text.Json.Serialization;
 
 namespace LindaSharp.Server;
 
-public class TupleJsonSerializer : JsonConverter<object?> {
+internal class TupleJsonSerializer : JsonConverter<object?> {
 	public override object? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options) {
 		switch (reader.TokenType) {
 		case JsonTokenType.Null:

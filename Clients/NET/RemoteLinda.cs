@@ -1,124 +1,54 @@
-﻿using LindaSharp.Server;
-using System.Net;
-using System.Net.Http.Headers;
-using System.Net.Http.Json;
-using System.Text.Json;
+﻿using Google.Protobuf.WellKnownTypes;
+using Grpc.Net.Client;
+using LindaSharp.Services;
 
 namespace LindaSharp.Client;
 
-public class RemoteLinda(string host, ushort port) : IScriptEvalLinda, IDisposable {
-	private readonly HttpClient actionsHttpClient = new() {
-		BaseAddress = new Uri($"http://{host}:{port}/api/actions/"),
-		Timeout = Timeout.InfiniteTimeSpan
-	};
-	private readonly HttpClient healthHttpClient = new() {
-		BaseAddress = new Uri($"http://{host}:{port}/api/health/"),
-		Timeout = TimeSpan.FromSeconds(1)
-	};
+public class RemoteLinda : IScriptEvalLinda, IDisposable {
+	private readonly GrpcChannel channel;
+	private readonly Actions.ActionsClient actionsClient;
+	private readonly Health.HealthClient healthClient;
 
-	private readonly CancellationTokenSource cancellationTokenSource = new();
-	private static readonly JsonSerializerOptions serializationOptions = new() {
-		Converters = {
-			new TupleJsonSerializer()
-		},
-		WriteIndented = true
-	};
-
-	private async Task<HttpResponseMessage> SendRequest(HttpRequestMessage request) {
-		try {
-			var response = await actionsHttpClient.SendAsync(request, cancellationTokenSource.Token);
-			ObjectDisposedException.ThrowIf(response.StatusCode == HttpStatusCode.InternalServerError, this);
-
-			return response;
-		} catch (TaskCanceledException) {
-			throw new ObjectDisposedException(nameof(RemoteLinda));
-		}
-	}
-
-	private async Task<object[]> WaitTuple(object?[] pattern, bool delete) {
-		using var request = new HttpRequestMessage(
-			delete ? HttpMethod.Delete : HttpMethod.Get,
-			delete ? "in" : "rd"
-		) {
-			Content = JsonContent.Create(pattern, options: serializationOptions)
-		};
-
-		using var response = await SendRequest(request);
-
-		return await response.Content.ReadFromJsonAsync<object[]>(serializationOptions);
-	}
-
-	private async Task<object[]?> TryGetTuple(object?[] pattern, bool delete) {
-		using var request = new HttpRequestMessage(
-			delete ? HttpMethod.Delete : HttpMethod.Get, 
-			delete ? "inp" : "rdp"
-		) {
-			Content = JsonContent.Create(pattern, options: serializationOptions)
-		};
-
-		using var response = await SendRequest(request);
-
-		if (response.StatusCode == HttpStatusCode.NotFound)
-			return null;
-
-		return await response.Content.ReadFromJsonAsync<object[]>(serializationOptions);
+	public RemoteLinda(string address) {
+		channel = GrpcChannel.ForAddress(address);
+		actionsClient = new Actions.ActionsClient(channel);
+		healthClient = new Health.HealthClient(channel);
 	}
 
 	public async Task Put(params object[] tuple) {
-		var request = new HttpRequestMessage(HttpMethod.Post, "out") {
-			Content = JsonContent.Create(tuple, options: serializationOptions)
-		};
-
-		using var response = await SendRequest(request);
-		response.EnsureSuccessStatusCode();
+		await actionsClient.OutAsync(tuple.ToGrpcTuple());
 	}
 
-	public Task<object[]> Get(params object?[] pattern) => WaitTuple(pattern, true);
-	public Task<object[]> Query(params object?[] pattern) => WaitTuple(pattern, false);
+	public async Task<object[]> Get(params object?[] pattern) => (await actionsClient.InAsync(pattern.ToGrpcPattern())).ToLindaTuple();
+	public async Task<object[]> Query(params object?[] pattern) => (await actionsClient.RdAsync(pattern.ToGrpcPattern())).ToLindaTuple();
 
 
-	public Task<object[]?> TryGet(params object?[] pattern) => TryGetTuple(pattern, true);
-	public Task<object[]?> TryQuery(params object?[] pattern) => TryGetTuple(pattern, false);
+	public async Task<object[]?> TryGet(params object?[] pattern) => 
+		(await actionsClient.InpAsync(pattern.ToGrpcPattern())).Tuple?.ToLindaTuple();
 
-	public async Task RegisterScript(string key, string ironpythonCode) {
-		var request = new HttpRequestMessage(HttpMethod.Put, $"eval/{key}") {
-			Content = new StringContent(ironpythonCode, MediaTypeHeaderValue.Parse("text/ironpython"))
-		};
+	public async Task<object[]?> TryQuery(params object?[] pattern) => 
+		(await actionsClient.RdpAsync(pattern.ToGrpcPattern())).Tuple?.ToLindaTuple();
 
-		using var response = await SendRequest(request);
-		response.EnsureSuccessStatusCode();
-	}
+	public async Task RegisterScript(string key, string ironpythonCode) => 
+		await actionsClient.RegisterScriptAsync(new RegisterScriptRequest { Key = key, IronPythonCode = ironpythonCode });
 
-	public async Task InvokeScript(string key, object? parameter = null) {
-		var request = new HttpRequestMessage(HttpMethod.Post, $"eval/{key}") {
-			Content = JsonContent.Create(parameter, options: serializationOptions)
-		};
-
-		using var response = await SendRequest(request);
-		response.EnsureSuccessStatusCode();
-	}
+	public async Task InvokeScript(string key, object? parameter = null) =>
+		await actionsClient.InvokeScriptAsync(new InvokeScriptRequest { Key = key, Parameter = MessageConversions.ElemToValue(parameter) });
 
 
-	public async Task EvalScript(string ironpythonCode) {
-		var request = new HttpRequestMessage(HttpMethod.Post, "eval") {
-			Content = new StringContent(ironpythonCode, MediaTypeHeaderValue.Parse("text/ironpython"))
-		};
-
-		using var response = await SendRequest(request);
-		response.EnsureSuccessStatusCode();
-	}
+	public async Task EvalScript(string ironpythonCode) =>
+		await actionsClient.EvalScriptAsync(new EvalScriptRequest { IronPythonCode = ironpythonCode });
 
 	public void Dispose() {
-		cancellationTokenSource.Cancel();
-		cancellationTokenSource.Dispose();
-		actionsHttpClient.Dispose();
-		healthHttpClient.Dispose();
+		GC.SuppressFinalize(this);
+
+		channel.Dispose();
 	}
 
 	public async Task<bool> IsHealthy() {
 		try {
-			using var response = await healthHttpClient.GetAsync("ping", cancellationTokenSource.Token);
-			return response.IsSuccessStatusCode;
+			var result = await healthClient.PingAsync(new Empty(), deadline: DateTime.UtcNow.AddSeconds(1));
+			return result.Value == "pong";
 		} catch (Exception) {
 			return false;
 		}

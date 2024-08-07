@@ -2,7 +2,7 @@
 using LindaSharp.Client;
 using System.Numerics;
 
-using var remoteClient = new RemoteLinda("localhost", 8080);
+using var remoteClient = new RemoteLinda("https://localhost:5001");
 
 while (true) {
 	if (await remoteClient.IsHealthy())

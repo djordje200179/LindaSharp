@@ -25,6 +25,7 @@ var app = builder.Build();
 
 // TODO: Change endpoint
 app.MapGrpcService<ActionsService>();
+app.MapGrpcService<HealthService>();
 
 app.MapControllers();
 

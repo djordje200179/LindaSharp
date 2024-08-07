@@ -1,0 +1,10 @@
+﻿syntax = "proto3";
+
+option csharp_namespace = "LindaSharp.Services";
+
+import "google/protobuf/wrappers.proto";
+import "google/protobuf/empty.proto";
+
+service Health {
+	rpc Ping (google.protobuf.Empty) returns (google.protobuf.StringValue);
+}

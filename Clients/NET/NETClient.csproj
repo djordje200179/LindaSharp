@@ -8,8 +8,26 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="Protos\actions.proto" />
+    <None Remove="Protos\health.proto" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Google.Protobuf" Version="3.27.3" />
+    <PackageReference Include="Grpc.Net.Client" Version="2.65.0" />
+    <PackageReference Include="Grpc.Tools" Version="2.65.0">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\..\Local\Local.csproj" />
-    <ProjectReference Include="..\..\Server\Server.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Protobuf Include="Protos\actions.proto" GrpcServices="Client" />
+    <Protobuf Include="Protos\health.proto" GrpcServices="Client" />
   </ItemGroup>
 
 </Project>

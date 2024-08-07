@@ -7,6 +7,8 @@ internal class ComparableDictionary : Dictionary<string, object?>, IEquatable<Co
 		return other is ComparableDictionary otherDict && Equals(otherDict);
 	}
 
+	public override int GetHashCode() => base.GetHashCode();
+
 	public bool Equals(ComparableDictionary? other) {
 		if (other is null)
 			return false;

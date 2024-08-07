@@ -1,0 +1,45 @@
+syntax = "proto3";
+
+option csharp_namespace = "LindaSharp.Services";
+
+import "google/protobuf/struct.proto";
+import "google/protobuf/empty.proto";
+
+service Actions {
+	rpc Out (Tuple) returns (google.protobuf.Empty);
+	rpc In (Pattern) returns (Tuple);
+	rpc Rd (Pattern) returns (Tuple);
+
+	rpc Inp (Pattern) returns (OptionalTuple);
+	rpc Rdp (Pattern) returns (OptionalTuple);
+
+	rpc RegisterScript (RegisterScriptRequest) returns (google.protobuf.Empty);
+	rpc InvokeScript (InvokeScriptRequest) returns (google.protobuf.Empty);
+	rpc EvalScript (EvalScriptRequest) returns (google.protobuf.Empty);
+}
+
+message Tuple {
+	repeated google.protobuf.Value Fields = 1;
+}
+
+message OptionalTuple {
+	optional Tuple Tuple = 1;
+}
+
+message Pattern {
+	repeated google.protobuf.Value Fields = 1;
+}
+
+message RegisterScriptRequest {
+	string Key = 1;
+	string IronPythonCode = 2;
+}
+
+message InvokeScriptRequest {
+	string Key = 1;
+	optional google.protobuf.Value Parameter = 2;
+}
+
+message EvalScriptRequest {
+	string IronPythonCode = 1;
+}

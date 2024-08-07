@@ -8,6 +8,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="Protos\health.proto" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="Grpc.AspNetCore" Version="2.63.0" />
     <PackageReference Include="IronPython" Version="3.4.1" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="6.6.2" />
@@ -18,7 +22,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Protobuf Include="Protos\linda.proto" GrpcServices="Both" />
+    <Protobuf Include="Protos\actions.proto" GrpcServices="Server" />
+    <Protobuf Include="Protos\health.proto" GrpcServices="Server" />
   </ItemGroup>
 
 </Project>
