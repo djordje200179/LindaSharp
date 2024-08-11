@@ -1,5 +1,6 @@
 ﻿using IronPython.Hosting;
 using Microsoft.Scripting.Hosting;
+using System.Collections.Concurrent;
 
 namespace LindaSharp.Server;
 
@@ -8,7 +9,7 @@ public class SharedLinda(IActionEvalLinda linda) : IScriptEvalLinda, ISpaceViewL
 	private readonly ScriptLocalLinda scriptLocalLinda = new(linda);
 
 	private readonly ScriptEngine pythonEngine = Python.CreateEngine();
-	private readonly IDictionary<string, string> evalScripts = new Dictionary<string, string>();
+	private readonly ConcurrentDictionary<string, string> evalScripts = new();
 
 	public Task Put(object[] tuple) => localLinda.Put(tuple);
 
@@ -19,7 +20,7 @@ public class SharedLinda(IActionEvalLinda linda) : IScriptEvalLinda, ISpaceViewL
 	public Task<object[]?> TryQuery(object?[] pattern) => localLinda.TryQuery(pattern);
 
 	public async Task RegisterScript(string key, string ironpythonCode) {
-		evalScripts[key] = ironpythonCode; // TODO: Fix concurrency
+		evalScripts[key] = ironpythonCode;
 	}
 
 	public async Task InvokeScript(string key, object? parameter = null) {
