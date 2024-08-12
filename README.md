@@ -28,8 +28,37 @@ Server is implemented using ASP.NET Core and supports:
 - gRPC **- mainly used**
 - GUI dashboard
 
-It supports running scripts that will be executed on the server side.
-Currently, IronPython is supported, but more languages will be added in the future.
+### Scripting
+Server supports running scripts that will be executed on the server side.
+Currently, only IronPython (.NET implementation of Python) is supported, 
+but more languages will be added in the future.
+
+Scripts will be executed in a separate thread and will have access to the tuple space
+through the `linda` object. 
+
+Example of an Ironpython script:
+```python
+while True:
+	if linda.try_query("done"):
+		break
+	
+	a_tuple = linda.get("a", None)
+	b_tuple = linda.get("b", None)
+	ind_tuple = linda.get("ind", None)
+
+	a = a_tuple[1]
+	b = b_tuple[1]
+	ind = ind_tuple[1]
+
+	ind += 1
+	c = a + b
+
+	linda.put("fib", ind, c)
+
+	linda.put("a", b)
+	linda.put("b", c)
+	linda.put("ind", ind)
+```
 
 ## Clients
 Clients are written in way that is idiomatic to the language they are written in.
