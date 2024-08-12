@@ -11,6 +11,17 @@ The library is divided into multiple parts:
     - JavaScript *- Coming soon*
     - Rust *- Coming soon*
 
+Supported operations:
+- `out`: Insert a tuple to the tuple space
+- `in`: Take a tuple from the tuple space
+- `rd`: Read a tuple from the tuple space (without removing it)
+- `inp`: Try to take a tuple from the tuple space immediately
+- `rdp`: Try to read a tuple from the tuple space immediately (without removing it)
+- `eval` - Run task in the tuple space
+    - Local tuple space will run the function in a separate thread
+    - Server tuple space will run the script on the server side
+    - Clients will send the script to the server to be executed
+
 ## Server
 Server is implemented using ASP.NET Core and supports:
 - REST API
