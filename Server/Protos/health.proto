@@ -6,5 +6,5 @@ import "google/protobuf/wrappers.proto";
 import "google/protobuf/empty.proto";
 
 service Health {
-	rpc Ping (google.protobuf.Empty) returns (google.protobuf.StringValue);
+	rpc Ping(google.protobuf.Empty) returns (google.protobuf.StringValue);
 }

@@ -32,19 +32,4 @@ public class ActionsService(SharedLinda linda) : Actions.ActionsBase {
 			Tuple = (await linda.Query(request.ToLindaPattern()))?.ToGrpcTuple()
 		};
 	}
-
-	public override async Task<Empty> RegisterScript(RegisterScriptRequest request, ServerCallContext context) {
-		await linda.RegisterScript(request.Key, request.IronPythonCode);
-		return new Empty();
-	}
-
-	public override async Task<Empty> InvokeScript(InvokeScriptRequest request, ServerCallContext context) {
-		await linda.InvokeScript(request.Key, MessageConversions.ValueToElem(request.Parameter));
-		return new Empty();
-	}
-
-	public override async Task<Empty> EvalScript(EvalScriptRequest request, ServerCallContext context) {
-		await linda.EvalScript(request.IronPythonCode);
-		return new Empty();
-	}
 }
