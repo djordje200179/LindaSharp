@@ -19,11 +19,12 @@ public class SharedLinda(IActionEvalLinda linda) : IScriptEvalLinda, ISpaceViewL
 	public Task<object[]?> TryGet(object?[] pattern) => localLinda.TryGet(pattern);
 	public Task<object[]?> TryQuery(object?[] pattern) => localLinda.TryQuery(pattern);
 
-	public async Task RegisterScript(string key, string ironpythonCode) {
+	public Task RegisterScript(string key, string ironpythonCode) {
 		evalScripts[key] = ironpythonCode;
+		return Task.CompletedTask;
 	}
 
-	public async Task InvokeScript(string key, object? parameter = null) {
+	public Task InvokeScript(string key, object? parameter = null) {
 		var script = evalScripts[key];
 
 		var scope = pythonEngine.CreateScope();
@@ -32,25 +33,34 @@ public class SharedLinda(IActionEvalLinda linda) : IScriptEvalLinda, ISpaceViewL
 
 		var thread = new Thread(() => pythonEngine.Execute(script, scope));
 		thread.Start();
+
+		return Task.CompletedTask;
 	}
 
-	public async Task EvalScript(string ironpythonCode) {
+	public Task EvalScript(string ironpythonCode) {
 		var scope = pythonEngine.CreateScope();
 		scope.SetVariable("linda", scriptLocalLinda);
 
 		var thread = new Thread(() => pythonEngine.Execute(ironpythonCode, scope));
 		thread.Start();
+
+		return Task.CompletedTask;
 	}
 
-	public async Task EvalScriptFile(string ironpythonFilePath) {
+	public Task EvalScriptFile(string ironpythonFilePath) {
 		var scope = pythonEngine.CreateScope();
 		scope.SetVariable("linda", scriptLocalLinda);
 
 		var thread = new Thread(() => pythonEngine.ExecuteFile(ironpythonFilePath, scope));
 		thread.Start();
+
+		return Task.CompletedTask;
 	}
 
 	public async Task<IEnumerable<object[]>> QueryAll() {
-		return localLinda is ISpaceViewLinda spaceViewLinda ? await spaceViewLinda.QueryAll() : throw new NotSupportedException();
+		if (localLinda is not ISpaceViewLinda spaceViewLinda)
+			throw new NotSupportedException();
+
+		return await spaceViewLinda.QueryAll();
 	}
 }

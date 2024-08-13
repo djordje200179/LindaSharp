@@ -5,7 +5,7 @@ using LindaSharp.Services;
 namespace LindaSharp.Server.Services;
 
 public class HealthService : Health.HealthBase {
-	public override async Task<StringValue> Ping(Empty request, ServerCallContext context) {
-		return new StringValue { Value = "pong" };
+	public override Task<StringValue> Ping(Empty request, ServerCallContext context) {
+		return Task.FromResult(new StringValue { Value = "pong" });
 	}
 }

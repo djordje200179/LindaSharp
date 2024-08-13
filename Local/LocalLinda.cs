@@ -1,4 +1,5 @@
-﻿using System.Threading.Channels;
+﻿using System.Diagnostics.CodeAnalysis;
+using System.Threading.Channels;
 
 namespace LindaSharp;
 
@@ -22,11 +23,11 @@ public class LocalLinda : IActionEvalLinda, ISpaceViewLinda {
 	}
 
 	private async Task<object[]> WaitTuple(object?[] pattern, bool removeFromSpace) {
+		if (TryGetTuple(pattern, removeFromSpace, out var existingTuple))
+			return existingTuple;
+
 		ChannelReader<object[]> receiver;
 		lock (this) {
-			if (TryGetTuple(pattern, removeFromSpace) is object[] existingTuple)
-				return existingTuple;
-
 			var channel = Channel.CreateBounded<object[]>(new BoundedChannelOptions(1) {
 				SingleReader = true,
 				SingleWriter = true,
@@ -39,16 +40,16 @@ public class LocalLinda : IActionEvalLinda, ISpaceViewLinda {
 		return await receiver.ReadAsync();
 	}
 
-	private object[]? TryGetTuple(object?[] pattern, bool removeFromSpace) {
+	private bool TryGetTuple(object?[] pattern, bool removeFromSpace, [NotNullWhen(true)] out object[]? tuple) {
 		lock (this) {
-			var tuple = tupleSpace.FirstOrDefault(tuple => IsTupleCompatible(pattern, tuple));
+			tuple = tupleSpace.FirstOrDefault(tuple => IsTupleCompatible(pattern, tuple));
 			if (tuple is null)
-				return null;
+				return false;
 
 			if (removeFromSpace)
 				tupleSpace.Remove(tuple);
 
-			return tuple;
+			return true;
 		}
 	}
 
@@ -85,14 +86,24 @@ public class LocalLinda : IActionEvalLinda, ISpaceViewLinda {
 	public Task<object[]> Get(params object?[] pattern) => WaitTuple(pattern, true);
 	public Task<object[]> Query(params object?[] pattern) => WaitTuple(pattern, false);
 
-	public async Task<object[]?> TryGet(params object?[] pattern) => TryGetTuple(pattern, true);
-	public async Task<object[]?> TryQuery(params object?[] pattern) => TryGetTuple(pattern, false);
+	public Task<object[]?> TryGet(params object?[] pattern) {
+		TryGetTuple(pattern, true, out var tuple);
+		return Task.FromResult(tuple);
+	}
+
+	public Task<object[]?> TryQuery(params object?[] pattern) {
+		TryGetTuple(pattern, false, out var tuple);
+		return Task.FromResult(tuple);
+	}
 
 	public void Eval(Action<IActionEvalLinda> func) => new Thread(() => func(this)).Start();
 
-	public async Task<IEnumerable<object[]>> QueryAll() {
+	public Task<IEnumerable<object[]>> QueryAll() {
+		List<object[]> tuples;
 		lock (this) {
-			return tupleSpace.Select(tuple => (object[])tuple.Clone());
+			tuples = tupleSpace.Select(tuple => (object[])tuple.Clone()).ToList();
 		}
+
+		return Task.FromResult(tuples.AsEnumerable());
 	}
 }
