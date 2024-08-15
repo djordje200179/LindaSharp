@@ -1,7 +1,6 @@
 package com.djordjemilanovic.lindasharp.client;
 
 import com.djordjemilanovic.lindasharp.services.ActionsGrpc;
-import com.djordjemilanovic.lindasharp.services.ActionsOuterClass;
 import com.djordjemilanovic.lindasharp.services.HealthGrpc;
 import com.djordjemilanovic.lindasharp.services.ScriptsGrpc;
 import io.grpc.*;
@@ -34,15 +33,13 @@ public class RemoteLinda {
 	}
 
 	public Optional<Object[]> tryGet(Object... pattern) {
-		return actionsStub.inp(MessageConversions.ToGrpcPattern(pattern)).getTuple() instanceof ActionsOuterClass.Tuple tuple
-		    ? Optional.of(MessageConversions.ToLindaTuple(tuple))
-		    : Optional.empty();
+		return Optional.ofNullable(actionsStub.inp(MessageConversions.ToGrpcPattern(pattern)).getTuple())
+				.map(MessageConversions::ToLindaTuple);
 	}
 
 	public Optional<Object[]> tryQuery(Object... pattern) {
-		return actionsStub.rdp(MessageConversions.ToGrpcPattern(pattern)).getTuple() instanceof ActionsOuterClass.Tuple tuple
-		    ? Optional.of(MessageConversions.ToLindaTuple(tuple))
-		    : Optional.empty();
+		return Optional.ofNullable(actionsStub.rdp(MessageConversions.ToGrpcPattern(pattern)).getTuple())
+				.map(MessageConversions::ToLindaTuple);
 	}
 
 	public boolean isHealthy() {

@@ -2,6 +2,7 @@
 using System.Numerics;
 using GrpcTuple = LindaSharp.Services.Tuple;
 using GrpcPattern = LindaSharp.Services.Pattern;
+using System.Collections;
 
 namespace LindaSharp.Client;
 
@@ -28,8 +29,8 @@ internal static class MessageConversions {
 			decimal num => Value.ForNumber((double)num),
 			BigInteger num => Value.ForNumber((double)num),
 
-			IEnumerable<object> list => Value.ForList(list.Select(ElemToValue).ToArray()),
-			IDictionary<string, object> dict => Value.ForStruct(dict.ToStruct()),
+			IDictionary dict => Value.ForStruct(dict.ToStruct()),
+			IEnumerable list => Value.ForList(list.Cast<object>().Select(ElemToValue).ToArray()),
 			_ => throw new ArgumentException($"Cannot parse {elem}")
 		};
 	}
@@ -41,22 +42,19 @@ internal static class MessageConversions {
 			Value.KindOneofCase.NumberValue => value.NumberValue,
 			Value.KindOneofCase.StringValue => value.StringValue,
 			Value.KindOneofCase.BoolValue => value.BoolValue,
-			Value.KindOneofCase.StructValue => value.StructValue.ToDict(),
+			Value.KindOneofCase.StructValue => value.StructValue.Fields.ToDictionary(p => p.Key, p => ValueToElem(p.Value))!,
 			Value.KindOneofCase.ListValue => value.ListValue.Values.Select(ValueToElem).ToList(),
 			_ => throw new ArgumentException($"Unknown case {value.KindCase}")
 		};
 	}
 
-	private static Struct ToStruct(this IDictionary<string, object> dict) {
+	private static Struct ToStruct(this IDictionary dict) {
 		var s = new Struct();
-		foreach (var (key, value) in dict)
-			s.Fields.Add(key, ElemToValue(value));
+
+		foreach (DictionaryEntry entry in dict)
+			s.Fields.Add(entry.Key.ToString(), ElemToValue(entry.Value));
 
 		return s;
-	}
-
-	private static IDictionary<string, object> ToDict(this Struct s) {
-		return s.Fields.ToDictionary(p => p.Key, p => ValueToElem(p.Value))!;
 	}
 
 	public static GrpcTuple ToGrpcTuple(this object[] lindaTuple) {
