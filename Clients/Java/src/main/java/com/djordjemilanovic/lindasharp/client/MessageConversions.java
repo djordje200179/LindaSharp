@@ -2,7 +2,6 @@ package com.djordjemilanovic.lindasharp.client;
 
 import com.djordjemilanovic.lindasharp.services.ActionsOuterClass;
 import com.google.protobuf.*;
-
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.Arrays;
@@ -51,7 +50,7 @@ class MessageConversions {
 		return switch(value.getKindCase()) {
 			case Value.KindCase.KIND_NOT_SET -> throw new UnsupportedOperationException();
 			case Value.KindCase.NULL_VALUE -> null;
-			case Value.KindCase.NUMBER_VALUE -> BigDecimal.valueOf(value.getNumberValue());
+			case Value.KindCase.NUMBER_VALUE -> value.getNumberValue();
 			case Value.KindCase.STRING_VALUE -> value.getStringValue();
 			case Value.KindCase.BOOL_VALUE -> value.getBoolValue();
 			case Value.KindCase.STRUCT_VALUE ->

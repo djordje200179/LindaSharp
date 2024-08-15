@@ -1,6 +1,5 @@
 ﻿using LindaSharp;
 using LindaSharp.Client;
-using System.Numerics;
 
 using var remoteClient = new RemoteLinda("http://localhost:5001");
 
@@ -19,10 +18,8 @@ for (var i = 0; i < 8; i++)
 	await remoteClient.InvokeScript("fib-calc");
 
 for (var i = 2; i <= 100; i++) {
-	var resultTuple = await remoteClient.Get("fib", new BigInteger(i), null);
-	var result = (BigInteger)resultTuple[2];
-
-	Console.WriteLine($"Fib[{i}] = {result}");
+	var resultTuple = await remoteClient.Get("fib", i, null);
+	Console.WriteLine($"Fib[{i}] = {resultTuple[2]}");
 }
 
 await remoteClient.Put("done");

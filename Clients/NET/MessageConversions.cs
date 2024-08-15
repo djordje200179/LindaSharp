@@ -38,7 +38,7 @@ internal static class MessageConversions {
 		return value.KindCase switch {
 			Value.KindOneofCase.None => throw new NotImplementedException(),
 			Value.KindOneofCase.NullValue => null,
-			Value.KindOneofCase.NumberValue => new BigInteger(value.NumberValue),
+			Value.KindOneofCase.NumberValue => value.NumberValue,
 			Value.KindOneofCase.StringValue => value.StringValue,
 			Value.KindOneofCase.BoolValue => value.BoolValue,
 			Value.KindOneofCase.StructValue => value.StructValue.ToDict(),
