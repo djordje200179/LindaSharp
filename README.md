@@ -7,7 +7,7 @@ The library is divided into multiple parts:
 - Clients: Clients that can connect to a server and interact with the tuple space.
     - .NET
     - Python
-    - Java *- Coming soon*
+    - Java
     - JavaScript *- Coming soon*
     - Rust *- Coming soon*
 

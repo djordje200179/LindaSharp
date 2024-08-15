@@ -1,6 +1,7 @@
 ﻿syntax = "proto3";
 
 option csharp_namespace = "LindaSharp.Services";
+option java_package = "com.djordjemilanovic.lindasharp.services";
 
 import "google/protobuf/struct.proto";
 import "google/protobuf/empty.proto";

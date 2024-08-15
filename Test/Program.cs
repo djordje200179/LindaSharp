@@ -2,12 +2,9 @@
 using LindaSharp.Client;
 using System.Numerics;
 
-using var remoteClient = new RemoteLinda("https://localhost:5001");
+using var remoteClient = new RemoteLinda("http://localhost:5001");
 
-while (true) {
-	if (await remoteClient.IsHealthy())
-		break;
-
+while (!await remoteClient.IsHealthy()) {
 	Console.WriteLine("Waiting for server...");
 	Thread.Sleep(1000);
 }
