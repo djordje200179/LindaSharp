@@ -6,7 +6,7 @@ namespace LindaSharp.Server.Services;
 
 public class ScriptsService(IScriptEvalLinda linda) : Scripts.ScriptsBase {
 	public override async Task<Empty> Register(RegisterScriptRequest request, ServerCallContext context) {
-		await linda.RegisterScript(request.Key, request.Script.Code);
+		await linda.RegisterScript(request.Key, request.Script.ToLindaScript());
 		return new Empty();
 	}
 
@@ -19,7 +19,7 @@ public class ScriptsService(IScriptEvalLinda linda) : Scripts.ScriptsBase {
 	}
 
 	public override async Task<EvalScriptResponse> Eval(EvalScriptRequest request, ServerCallContext context) {
-		var id = await linda.EvalScript(request.Script.Code);
+		var id = await linda.EvalScript(request.Script.ToLindaScript());
 		
 		return new EvalScriptResponse {
 			TaskId = id

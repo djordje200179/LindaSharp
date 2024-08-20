@@ -3,6 +3,7 @@ using System.Numerics;
 using GrpcTuple = LindaSharp.Services.Tuple;
 using GrpcPattern = LindaSharp.Services.Pattern;
 using GrpcScriptExecutionStatus = LindaSharp.Services.ScriptExecutionStatus;
+using GrpcScript = LindaSharp.Services.Script;
 using System.Collections;
 using static LindaSharp.IScriptEvalLinda;
 using static LindaSharp.IScriptEvalLinda.ScriptExecutionStatus;
@@ -87,6 +88,17 @@ internal static class MessageConversions {
 					// TODO: Embed other fields
 				}),
 			_ => throw new ArgumentException(nameof(status.StatusCase))
+		};
+	}
+
+	public static GrpcScript ToGrpcScript(this Script script) {
+		return new GrpcScript {
+			Code = script.Code,
+			Type = script.Type switch {
+				Script.Language.IronPython => GrpcScript.Types.Type.Ironpython,
+				Script.Language.CSharp => GrpcScript.Types.Type.CSharp,
+				_ => throw new ArgumentException(nameof(script.Type))
+			}
 		};
 	}
 }

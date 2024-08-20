@@ -10,7 +10,7 @@ public class ScriptEvalLinda(IActionEvalLinda linda) : IScriptEvalLinda {
 	private readonly ScriptLocalLinda scriptLocalLinda = new(linda);
 
 	private readonly ScriptHost.ScriptEngine pythonEngine = Python.CreateEngine();
-	private readonly ConcurrentDictionary<string, string> evalScripts = new();
+	private readonly ConcurrentDictionary<string, IScriptEvalLinda.Script> evalScripts = new();
 	private readonly ConcurrentDictionary<int, Exception?> evalResults = new();
 
 	public Task Put(object[] tuple) => localLinda.Put(tuple);
@@ -21,13 +21,13 @@ public class ScriptEvalLinda(IActionEvalLinda linda) : IScriptEvalLinda {
 	public Task<object[]?> TryGet(object?[] pattern) => localLinda.TryGet(pattern);
 	public Task<object[]?> TryQuery(object?[] pattern) => localLinda.TryQuery(pattern);
 
-	public Task RegisterScript(string key, string ironpythonCode) {
-		evalScripts[key] = ironpythonCode;
+	public Task RegisterScript(string key, IScriptEvalLinda.Script script) {
+		evalScripts[key] = script;
 		return Task.CompletedTask;
 	}
 
-	private int StartScriptExecution(ScriptHost.ScriptScope scope, string script) {
-		var task = new Task(() => pythonEngine.Execute(script, scope));
+	private int StartScriptExecution(ScriptHost.ScriptScope scope, IScriptEvalLinda.Script script) {
+		var task = new Task(() => pythonEngine.Execute(script.Code, scope));
 		task.ContinueWith(task => evalResults[task.Id] = task.Exception);
 		task.ConfigureAwait(false);
 		task.Start();
@@ -45,11 +45,11 @@ public class ScriptEvalLinda(IActionEvalLinda linda) : IScriptEvalLinda {
 		return Task.FromResult(StartScriptExecution(scope, script));
 	}
 
-	public Task<int> EvalScript(string ironpythonCode) {
+	public Task<int> EvalScript(IScriptEvalLinda.Script script) {
 		var scope = pythonEngine.CreateScope();
 		scope.SetVariable("linda", scriptLocalLinda);
 
-		return Task.FromResult(StartScriptExecution(scope, ironpythonCode));
+		return Task.FromResult(StartScriptExecution(scope, script));
 	}
 
 	public Task<IScriptEvalLinda.ScriptExecutionStatus> GetScriptExecutionStatus(int id) {

@@ -25,19 +25,18 @@ public class RemoteLinda : IScriptEvalLinda, IDisposable {
 	public async Task<object[]> Query(params object?[] pattern) => (await actionsClient.RdAsync(pattern.ToGrpcPattern())).ToLindaTuple();
 
 
-	public async Task<object[]?> TryGet(params object?[] pattern) => 
+	public async Task<object[]?> TryGet(params object?[] pattern) =>
 		(await actionsClient.InpAsync(pattern.ToGrpcPattern())).Tuple?.ToLindaTuple();
 
-	public async Task<object[]?> TryQuery(params object?[] pattern) => 
+	public async Task<object[]?> TryQuery(params object?[] pattern) =>
 		(await actionsClient.RdpAsync(pattern.ToGrpcPattern())).Tuple?.ToLindaTuple();
 
-	public async Task RegisterScript(string key, string ironpythonCode) => await scriptsClient.RegisterAsync(new RegisterScriptRequest { 
-		Key = key,
-		Script = new Script {
-			Type = Script.Types.Type.Ironpython,
-			Code = ironpythonCode,
-		}
-	});
+	public async Task RegisterScript(string key, IScriptEvalLinda.Script script) {
+		var response = await scriptsClient.RegisterAsync(new RegisterScriptRequest {
+			Key = key,
+			Script = script.ToGrpcScript()
+		});
+	}
 
 	public async Task<int> InvokeScript(string key, object? parameter = null) {
 		var response = await scriptsClient.InvokeAsync(new InvokeScriptRequest {
@@ -49,13 +48,8 @@ public class RemoteLinda : IScriptEvalLinda, IDisposable {
 	}
 
 
-	public async Task<int> EvalScript(string ironpythonCode) {
-		var response = await scriptsClient.EvalAsync(new EvalScriptRequest {
-			Script = new Script {
-				Type = Script.Types.Type.Ironpython,
-				Code = ironpythonCode,
-			}
-		});
+	public async Task<int> EvalScript(IScriptEvalLinda.Script script) {
+		var response = await scriptsClient.EvalAsync(new EvalScriptRequest { Script = script.ToGrpcScript() });
 
 		return response.TaskId;
 	}

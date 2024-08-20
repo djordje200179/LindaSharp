@@ -4,6 +4,7 @@ using System.Numerics;
 using GrpcTuple = LindaSharp.Services.Tuple;
 using GrpcPattern = LindaSharp.Services.Pattern;
 using GrpcScriptExecutionStatus = LindaSharp.Services.ScriptExecutionStatus;
+using GrpcScript = LindaSharp.Services.Script;
 using static LindaSharp.IScriptEvalLinda;
 using static LindaSharp.IScriptEvalLinda.ScriptExecutionStatus;
 
@@ -92,5 +93,16 @@ internal static class MessageConversions {
 				},
 			_ => throw new ArgumentException("invalid status")
 		};
+	}
+
+	public static Script ToLindaScript(this GrpcScript script) {
+		return new Script(
+			script.Type switch {
+				GrpcScript.Types.Type.Ironpython => Script.Language.IronPython,
+				GrpcScript.Types.Type.CSharp => Script.Language.CSharp,
+				_ => throw new ArgumentException("invalid script type")
+			},
+			script.Code
+		);
 	}
 }

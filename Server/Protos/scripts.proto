@@ -15,6 +15,7 @@ service Scripts {
 message Script {
 	enum Type {
 		IRONPYTHON = 0;
+		C_SHARP = 1;
 	}
 
 	Type type = 1;

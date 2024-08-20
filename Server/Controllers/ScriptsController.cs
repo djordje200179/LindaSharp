@@ -19,7 +19,13 @@ public class ScriptsController(IScriptEvalLinda linda) : ControllerBase {
 			return BadRequest();
 		}
 
-		await linda.EvalScript(await reader.ReadToEndAsync());
+		//TODO: Allow other languages
+		var script = new IScriptEvalLinda.Script(
+			IScriptEvalLinda.Script.Language.IronPython,
+			await reader.ReadToEndAsync()
+		);
+
+		await linda.EvalScript(script);
 
 		return Accepted();
 	}
@@ -37,8 +43,13 @@ public class ScriptsController(IScriptEvalLinda linda) : ControllerBase {
 		} else {
 			return BadRequest();
 		}
+		//TODO: Allow other languages
+		var script = new IScriptEvalLinda.Script(
+			IScriptEvalLinda.Script.Language.IronPython,
+			await reader.ReadToEndAsync()
+		);
 
-		await linda.RegisterScript(key, await reader.ReadToEndAsync());
+		await linda.RegisterScript(key, script);
 
 		return Created();
 	}
