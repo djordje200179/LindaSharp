@@ -7,7 +7,7 @@ using GrpcPattern = LindaSharp.Services.Pattern;
 
 namespace LindaSharp.Server.Services;
 
-public class ActionsService(SharedLinda linda) : Actions.ActionsBase {
+public class ActionsService(ILinda linda) : Actions.ActionsBase {
 	public override async Task<Empty> Out(GrpcTuple request, ServerCallContext context) {
 		await linda.Put(request.ToLindaTuple());
 		return new Empty();

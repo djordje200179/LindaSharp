@@ -10,10 +10,6 @@ public interface ILinda {
 	public Task<object[]?> TryQuery(params object?[] pattern);
 }
 
-public interface IActionEvalLinda : ILinda {
-	public void Eval(Action<IActionEvalLinda> func);
-}
-
 public interface ISpaceViewLinda : ILinda {
 	public Task<IEnumerable<object[]>> QueryAll();
 }

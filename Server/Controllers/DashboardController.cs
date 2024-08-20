@@ -3,7 +3,7 @@
 namespace LindaSharp.Server.Controllers;
 
 [Route("/")]
-public class DashboardController(SharedLinda linda) : Controller {
+public class DashboardController(ISpaceViewLinda linda) : Controller {
 	[HttpGet("")]
 	public async Task<IActionResult> Index() {
 		ViewBag.TupleSpace = await linda.QueryAll();

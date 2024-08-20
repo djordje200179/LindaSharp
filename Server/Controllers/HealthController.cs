@@ -6,7 +6,7 @@ namespace LindaSharp.Server.Controllers;
 
 [Route("api/health")]
 [ApiController]
-public class HealthController(SharedLinda linda) : ControllerBase {
+public class HealthController(IScriptEvalLinda linda) : ControllerBase {
 	[HttpGet("ping")]
 	public ActionResult Ping() {
 		return Ok("pong");

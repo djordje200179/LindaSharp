@@ -1,6 +1,6 @@
 ﻿using IronPython.Runtime.Operations;
 
-namespace LindaSharp.Server;
+namespace LindaSharp.ScriptEngine;
 
 public class ScriptLocalLinda(IActionEvalLinda linda) {
 	private static object?[] ReformatTuple(object?[] tuple) {

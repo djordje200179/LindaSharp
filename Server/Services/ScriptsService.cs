@@ -4,7 +4,7 @@ using LindaSharp.Services;
 
 namespace LindaSharp.Server.Services;
 
-public class ScriptsService(SharedLinda linda) : Scripts.ScriptsBase {
+public class ScriptsService(IScriptEvalLinda linda) : Scripts.ScriptsBase {
 	public override async Task<Empty> Register(RegisterScriptRequest request, ServerCallContext context) {
 		await linda.RegisterScript(request.Key, request.Script.Code);
 		return new Empty();

@@ -1,14 +1,19 @@
 using LindaSharp;
+using LindaSharp.ScriptEngine;
 using LindaSharp.Server;
 using LindaSharp.Server.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
-var linda = new SharedLinda(new LocalLinda());
+var localLinda = new LocalLinda();
+var scriptEvalLinda = new ScriptEvalLinda(localLinda);
 
 builder.Services.AddGrpc();
 
-builder.Services.AddSingleton(linda);
+builder.Services
+	.AddSingleton<ILinda>(localLinda)
+	.AddSingleton<ISpaceViewLinda>(localLinda)
+	.AddSingleton<IScriptEvalLinda>(scriptEvalLinda);
 
 builder.Services
 	.AddControllersWithViews()

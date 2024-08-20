@@ -4,7 +4,7 @@ namespace LindaSharp.Server.Controllers;
 
 [Route("api/actions")]
 [ApiController]
-public class ActionsController(SharedLinda linda) : ControllerBase {
+public class ActionsController(ILinda linda) : ControllerBase {
 	[HttpPost("out")]
 	public async Task<IActionResult> Out([FromBody] object[] tuple) {
 		await linda.Put(tuple);

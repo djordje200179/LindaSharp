@@ -4,7 +4,7 @@ namespace LindaSharp.Server.Controllers;
 
 [Route("api/scripts")]
 [ApiController]
-public class ScriptsController(SharedLinda linda) : ControllerBase {
+public class ScriptsController(IScriptEvalLinda linda) : ControllerBase {
 	[HttpPost("eval")]
 	public async Task<IActionResult> Eval() {
 		var request = HttpContext.Request;

@@ -4,7 +4,7 @@ using LindaSharp.Services;
 
 namespace LindaSharp.Server.Services;
 
-public class HealthService(SharedLinda linda) : Health.HealthBase {
+public class HealthService(IScriptEvalLinda linda) : Health.HealthBase {
 	public override Task<StringValue> Ping(Empty request, ServerCallContext context) {
 		return Task.FromResult(new StringValue { Value = "pong" });
 	}

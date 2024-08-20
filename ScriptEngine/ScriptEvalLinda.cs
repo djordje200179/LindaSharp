@@ -1,15 +1,15 @@
 ﻿using IronPython.Hosting;
-using Microsoft.Scripting.Hosting;
+using ScriptHost = Microsoft.Scripting.Hosting;
 using System.Collections.Concurrent;
 using static LindaSharp.IScriptEvalLinda.ScriptExecutionStatus;
 
-namespace LindaSharp.Server;
+namespace LindaSharp.ScriptEngine;
 
-public class SharedLinda(IActionEvalLinda linda) : IScriptEvalLinda, ISpaceViewLinda {
+public class ScriptEvalLinda(IActionEvalLinda linda) : IScriptEvalLinda {
 	private readonly ILinda localLinda = linda;
 	private readonly ScriptLocalLinda scriptLocalLinda = new(linda);
 
-	private readonly ScriptEngine pythonEngine = Python.CreateEngine();
+	private readonly ScriptHost.ScriptEngine pythonEngine = Python.CreateEngine();
 	private readonly ConcurrentDictionary<string, string> evalScripts = new();
 	private readonly ConcurrentDictionary<int, Exception?> evalResults = new();
 
@@ -26,7 +26,7 @@ public class SharedLinda(IActionEvalLinda linda) : IScriptEvalLinda, ISpaceViewL
 		return Task.CompletedTask;
 	}
 
-	private int StartScriptExecution(ScriptScope scope, string script) {
+	private int StartScriptExecution(ScriptHost.ScriptScope scope, string script) {
 		var task = new Task(() => pythonEngine.Execute(script, scope));
 		task.ContinueWith(task => evalResults[task.Id] = task.Exception);
 		task.ConfigureAwait(false);
@@ -60,12 +60,5 @@ public class SharedLinda(IActionEvalLinda linda) : IScriptEvalLinda, ISpaceViewL
 			exception is null ? ExecutionState.Finished : ExecutionState.Exception,
 			exception
 		));
-	}
-
-	public async Task<IEnumerable<object[]>> QueryAll() {
-		if (localLinda is not ISpaceViewLinda spaceViewLinda)
-			throw new NotSupportedException();
-
-		return await spaceViewLinda.QueryAll();
 	}
 }

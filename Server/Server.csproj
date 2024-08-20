@@ -16,12 +16,12 @@
 
   <ItemGroup>
     <PackageReference Include="Grpc.AspNetCore" Version="2.63.0" />
-    <PackageReference Include="IronPython" Version="3.4.1" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="6.6.2" />
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\\Local\Local.csproj" />
+    <ProjectReference Include="..\Local\Local.csproj" />
+    <ProjectReference Include="..\ScriptEngine\ScriptEngine.csproj" />
   </ItemGroup>
 
   <ItemGroup>
