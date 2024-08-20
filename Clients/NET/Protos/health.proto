@@ -8,4 +8,21 @@ import "google/protobuf/empty.proto";
 
 service Health {
 	rpc Ping(google.protobuf.Empty) returns (google.protobuf.StringValue);
+
+	rpc GetScriptExecutionStatus(google.protobuf.Int32Value) returns (ScriptExecutionStatus);
+}
+
+message ScriptExecutionStatus {
+	message Exception {
+		string message = 1;
+		string source = 2;
+		string stack_trace = 3;
+		string type = 4;
+	}
+
+	oneof status {
+		google.protobuf.Empty not_found = 1;
+		google.protobuf.Empty ok = 2;
+		Exception exception = 3;
+	};
 }

@@ -8,8 +8,8 @@ import "google/protobuf/empty.proto";
 
 service Scripts {
 	rpc Register(RegisterScriptRequest) returns (google.protobuf.Empty);
-	rpc Invoke(InvokeScriptRequest) returns (google.protobuf.Empty);
-	rpc Eval(EvalScriptRequest) returns (google.protobuf.Empty);
+	rpc Invoke(InvokeScriptRequest) returns (EvalScriptResponse);
+	rpc Eval(EvalScriptRequest) returns (EvalScriptResponse);
 }
 
 message Script {
@@ -35,4 +35,8 @@ message InvokeScriptRequest {
 
 message EvalScriptRequest {
 	Script script = 1;
+}
+
+message EvalScriptResponse {
+	int32 task_id = 1;
 }

@@ -3,6 +3,9 @@ using LindaSharp.Server.Types;
 using System.Numerics;
 using GrpcTuple = LindaSharp.Services.Tuple;
 using GrpcPattern = LindaSharp.Services.Pattern;
+using GrpcScriptExecutionStatus = LindaSharp.Services.ScriptExecutionStatus;
+using static LindaSharp.IScriptEvalLinda;
+using static LindaSharp.IScriptEvalLinda.ScriptExecutionStatus;
 
 namespace LindaSharp.Server.Services;
 
@@ -73,4 +76,21 @@ internal static class MessageConversions {
 
 	public static object[] ToLindaTuple(this GrpcTuple grpcTuple) => grpcTuple.Fields.Select(ValueToElem).ToArray()!;
 	public static object?[] ToLindaPattern(this GrpcPattern grpcPattern) => grpcPattern.Fields.Select(ValueToElem).ToArray();
+
+	public static GrpcScriptExecutionStatus ToGrpcStatus(this ScriptExecutionStatus status) {
+		return status switch {
+			ScriptExecutionStatus(ExecutionState.NotFound, _) => new GrpcScriptExecutionStatus { NotFound = new Empty() },
+			ScriptExecutionStatus(ExecutionState.Finished, _) => new GrpcScriptExecutionStatus { Ok = new Empty() },
+			ScriptExecutionStatus(ExecutionState.Exception, var exception) when exception is not null =>
+				new GrpcScriptExecutionStatus {
+					Exception = new GrpcScriptExecutionStatus.Types.Exception {
+						Message = exception.Message,
+						Source = exception.Source,
+						StackTrace = exception.StackTrace,
+						Type = exception.GetType().FullName,
+					}
+				},
+			_ => throw new ArgumentException("invalid status")
+		};
+	}
 }

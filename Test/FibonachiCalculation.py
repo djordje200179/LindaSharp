@@ -2,13 +2,9 @@
 	if linda.try_query("done"):
 		break
 	
-	a_tuple = linda.get("a", None)
-	b_tuple = linda.get("b", None)
-	ind_tuple = linda.get("ind", None)
-
-	a = a_tuple[1]
-	b = b_tuple[1]
-	ind = ind_tuple[1]
+	_, a = linda.get("a", None)
+	_, b = linda.get("b", None)
+	_, ind = linda.get("ind", None)
 
 	ind += 1
 	c = a + b

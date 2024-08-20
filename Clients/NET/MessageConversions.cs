@@ -2,7 +2,10 @@
 using System.Numerics;
 using GrpcTuple = LindaSharp.Services.Tuple;
 using GrpcPattern = LindaSharp.Services.Pattern;
+using GrpcScriptExecutionStatus = LindaSharp.Services.ScriptExecutionStatus;
 using System.Collections;
+using static LindaSharp.IScriptEvalLinda;
+using static LindaSharp.IScriptEvalLinda.ScriptExecutionStatus;
 
 namespace LindaSharp.Client;
 
@@ -72,4 +75,18 @@ internal static class MessageConversions {
 	}
 
 	public static object[] ToLindaTuple(this GrpcTuple grpcTuple) => grpcTuple.Fields.Select(ValueToElem).ToArray()!;
+
+	public static ScriptExecutionStatus ToLindaStatus(this GrpcScriptExecutionStatus status) {
+		return status.StatusCase switch {
+			GrpcScriptExecutionStatus.StatusOneofCase.NotFound => new ScriptExecutionStatus(ExecutionState.NotFound),
+			GrpcScriptExecutionStatus.StatusOneofCase.Ok => new ScriptExecutionStatus(ExecutionState.Finished),
+			GrpcScriptExecutionStatus.StatusOneofCase.Exception => new ScriptExecutionStatus(
+				ExecutionState.Exception,
+				new Exception(status.Exception.Message) {
+					Source = status.Exception.Source,
+					// TODO: Embed other fields
+				}),
+			_ => throw new ArgumentException(nameof(status.StatusCase))
+		};
+	}
 }

@@ -39,18 +39,31 @@ public class RemoteLinda : IScriptEvalLinda, IDisposable {
 		}
 	});
 
-	public async Task InvokeScript(string key, object? parameter = null) => await scriptsClient.InvokeAsync(new InvokeScriptRequest { 
-		Key = key, 
-		Parameter = MessageConversions.ElemToValue(parameter)
-	});
+	public async Task<int> InvokeScript(string key, object? parameter = null) {
+		var response = await scriptsClient.InvokeAsync(new InvokeScriptRequest {
+			Key = key,
+			Parameter = MessageConversions.ElemToValue(parameter)
+		});
+
+		return response.TaskId;
+	}
 
 
-	public async Task EvalScript(string ironpythonCode) => await scriptsClient.EvalAsync(new EvalScriptRequest {
-		Script = new Script {
-			Type = Script.Types.Type.Ironpython,
-			Code = ironpythonCode,
-		}
-	});
+	public async Task<int> EvalScript(string ironpythonCode) {
+		var response = await scriptsClient.EvalAsync(new EvalScriptRequest {
+			Script = new Script {
+				Type = Script.Types.Type.Ironpython,
+				Code = ironpythonCode,
+			}
+		});
+
+		return response.TaskId;
+	}
+
+	public async Task<IScriptEvalLinda.ScriptExecutionStatus> GetScriptExecutionStatus(int id) {
+		var response = await healthClient.GetScriptExecutionStatusAsync(new Int32Value { Value = id });
+		return response.ToLindaStatus();
+	}
 
 	public void Dispose() {
 		GC.SuppressFinalize(this);
