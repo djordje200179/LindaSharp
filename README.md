@@ -34,7 +34,12 @@ Currently, only IronPython (.NET implementation of Python) is supported,
 but more languages will be added in the future.
 
 Scripts will be executed in a separate thread and will have access to the tuple space
-through the `linda` object. 
+through the `linda` object.
+Also, registered scripts can be invoked with a parameter, which can be accessed
+through the `param` variable.
+
+Script execution status can be checked with an execution ID, which is returned
+when the script is started.
 
 Example of an Ironpython script:
 ```python
@@ -42,13 +47,9 @@ while True:
 	if linda.try_query("done"):
 		break
 	
-	a_tuple = linda.get("a", None)
-	b_tuple = linda.get("b", None)
-	ind_tuple = linda.get("ind", None)
-
-	a = a_tuple[1]
-	b = b_tuple[1]
-	ind = ind_tuple[1]
+	_, a = linda.get("a", None)
+	_, b = linda.get("b", None)
+	_, ind = linda.get("ind", None)
 
 	ind += 1
 	c = a + b
