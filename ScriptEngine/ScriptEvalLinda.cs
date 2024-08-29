@@ -1,5 +1,4 @@
-﻿using IronPython.Hosting;
-using ScriptHost = Microsoft.Scripting.Hosting;
+﻿using LindaSharp.ScriptEngine.Interpreters;
 using System.Collections.Concurrent;
 using static LindaSharp.IScriptEvalLinda.ScriptExecutionStatus;
 
@@ -9,7 +8,10 @@ public class ScriptEvalLinda(IActionEvalLinda linda) : IScriptEvalLinda {
 	private readonly ILinda localLinda = linda;
 	private readonly ScriptLocalLinda scriptLocalLinda = new(linda);
 
-	private readonly ScriptHost.ScriptEngine pythonEngine = Python.CreateEngine();
+	private readonly Dictionary<IScriptEvalLinda.Script.Language, IInterpreter> interpreters = new() {
+		{ IScriptEvalLinda.Script.Language.IronPython, new IronPythonInterpreter(linda) }
+	};
+
 	private readonly ConcurrentDictionary<string, IScriptEvalLinda.Script> evalScripts = new();
 	private readonly ConcurrentDictionary<int, Exception?> evalResults = new();
 
@@ -26,30 +28,25 @@ public class ScriptEvalLinda(IActionEvalLinda linda) : IScriptEvalLinda {
 		return Task.CompletedTask;
 	}
 
-	private int StartScriptExecution(ScriptHost.ScriptScope scope, IScriptEvalLinda.Script script) {
-		var task = new Task(() => pythonEngine.Execute(script.Code, scope));
-		task.ContinueWith(task => evalResults[task.Id] = task.Exception);
-		task.ConfigureAwait(false);
-		task.Start();
-
-		return task.Id;
-	}
-
 	public Task<int> InvokeScript(string key, object? parameter = null) {
 		var script = evalScripts[key];
+		var interpreter = interpreters[script.Type];
 
-		var scope = pythonEngine.CreateScope();
-		scope.SetVariable("linda", scriptLocalLinda);
-		scope.SetVariable("param", parameter);
+		var task = interpreter.Execute(script.Code, parameter);
+		task.ContinueWith(task => evalResults[task.Id] = task.Exception);
+		task.Start();
 
-		return Task.FromResult(StartScriptExecution(scope, script));
+		return Task.FromResult(task.Id);
 	}
 
 	public Task<int> EvalScript(IScriptEvalLinda.Script script) {
-		var scope = pythonEngine.CreateScope();
-		scope.SetVariable("linda", scriptLocalLinda);
+		var interpreter = interpreters[script.Type];
 
-		return Task.FromResult(StartScriptExecution(scope, script));
+		var task = interpreter.Execute(script.Code, null);
+		task.ContinueWith(task => evalResults[task.Id] = task.Exception);
+		task.Start();
+
+		return Task.FromResult(task.Id);
 	}
 
 	public Task<IScriptEvalLinda.ScriptExecutionStatus> GetScriptExecutionStatus(int id) {
