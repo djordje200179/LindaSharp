@@ -1,0 +1,29 @@
+syntax = "proto3";
+
+option csharp_namespace = "LindaSharp.Services";
+option java_package = "com.djordjemilanovic.lindasharp.services";
+
+import "google/protobuf/struct.proto";
+import "google/protobuf/empty.proto";
+
+service Actions {
+	rpc Out(Tuple) returns (google.protobuf.Empty);
+
+	rpc In(Pattern) returns (Tuple);
+	rpc Rd(Pattern) returns (Tuple);
+
+	rpc Inp(Pattern) returns (OptionalTuple);
+	rpc Rdp(Pattern) returns (OptionalTuple);
+}
+
+message Tuple {
+	repeated google.protobuf.Value fields = 1;
+}
+
+message OptionalTuple {
+	optional Tuple tuple = 1;
+}
+
+message Pattern {
+	repeated google.protobuf.Value fields = 1;
+}

@@ -1,0 +1,43 @@
+﻿syntax = "proto3";
+
+option csharp_namespace = "LindaSharp.Services";
+option java_package = "com.djordjemilanovic.lindasharp.services";
+
+import "google/protobuf/struct.proto";
+import "google/protobuf/empty.proto";
+
+service Scripts {
+	rpc Register(RegisterScriptRequest) returns (google.protobuf.Empty);
+	rpc Invoke(InvokeScriptRequest) returns (EvalScriptResponse);
+	rpc Eval(EvalScriptRequest) returns (EvalScriptResponse);
+}
+
+message Script {
+	enum Type {
+		IRONPYTHON = 0;
+		C_SHARP = 1;
+	}
+
+	Type type = 1;
+
+	string code = 2;
+}
+
+message RegisterScriptRequest {
+	string key = 1;
+
+	Script script = 2;
+}
+
+message InvokeScriptRequest {
+	string key = 1;
+	optional google.protobuf.Value parameter = 2;
+}
+
+message EvalScriptRequest {
+	Script script = 1;
+}
+
+message EvalScriptResponse {
+	int32 task_id = 1;
+}

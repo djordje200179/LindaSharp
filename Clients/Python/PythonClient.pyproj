@@ -22,7 +22,25 @@
     <EnableUnmanagedDebugging>false</EnableUnmanagedDebugging>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="actions_pb2.py" />
+    <Compile Include="actions_pb2_grpc.py" />
+    <Compile Include="health_pb2.py" />
+    <Compile Include="health_pb2_grpc.py" />
+    <Compile Include="message_conversions.py" />
     <Compile Include="remote_linda.py" />
+    <Compile Include="scripts_pb2.py" />
+    <Compile Include="scripts_pb2_grpc.py" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="proto\" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="actions_pb2.pyi" />
+    <Content Include="health_pb2.pyi" />
+    <Content Include="proto\actions.proto" />
+    <Content Include="proto\health.proto" />
+    <Content Include="proto\scripts.proto" />
+    <Content Include="scripts_pb2.pyi" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\Python Tools\Microsoft.PythonTools.targets" />
   <!-- Uncomment the CoreCompile target to enable the Build command in

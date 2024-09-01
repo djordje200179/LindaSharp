@@ -1,95 +1,96 @@
-from typing import Any, Sequence
-import requests
-
-
-class LindaDisposedException(Exception):
-	def __str__(self):
-		return "Server Linda was disposed"
+import asyncio
+from google.protobuf.internal.well_known_types import Any
+from google.protobuf.wrappers_pb2 import StringValue
+import grpc
+from google.protobuf.empty_pb2 import Empty
+from actions_pb2 import OptionalTuple, Pattern, Tuple
+from health_pb2_grpc import HealthStub
+from actions_pb2_grpc import ActionsStub
+from message_conversions import elem_to_value, value_to_elem
+from scripts_pb2 import EvalScriptRequest, EvalScriptResponse, InvokeScriptRequest, RegisterScriptRequest, Script
+from scripts_pb2_grpc import ScriptsStub
 
 
 class RemoteLinda:
-	def __init__(self, host: str, port: int):
-		self.__base_url = f"http://{host}:{port}/api/"
-		self.__actions_url = self.__base_url + "actions/"
-		self.__health_url = self.__base_url + "health/"
+	def __init__(self, target: str):
+		self.__channel = grpc.aio.insecure_channel(target)
+		self.__health_stub = HealthStub(self.__channel)
+		self.__actions_stub = ActionsStub(self.__channel)
+		self.__scripts_stub = ScriptsStub(self.__channel)
 
-	def __send_text_request(self, http_method: str, path: str, data: any, content_type: str):
-		url = self.__actions_url + path
-		headers = {"Content-Type": content_type}
-		response = requests.request(http_method, url, data=data, headers=headers)
+	async def put(self, *tuple) -> None:
+		request = Tuple()
+		request.fields.extend(elem_to_value(elem) for elem in tuple)
+		await self.__actions_stub.Out(request)
 
-		if response.status_code == requests.codes.server_error:
-			raise LindaDisposedException()
+	async def get(self, *pattern) -> list:
+		request = Pattern()
+		request.fields.extend(elem_to_value(elem) for elem in pattern)
+		response: Tuple = await self.__actions_stub.In(request)
+		return [value_to_elem(value) for value in response.fields]
 
-		return response
+	async def query(self, *pattern) -> list:
+		request = Pattern()
+		request.fields.extend(elem_to_value(elem) for elem in pattern)
+		response: Tuple = await self.__actions_stub.Rd(request)
+		return [value_to_elem(value) for value in response.fields]
 
-	def __send_json_request(self, http_method: str, path: str, data: any):
-		url = self.__actions_url + path
-		response = requests.request(http_method, url, json=data)
+	async def try_get(self, *pattern) -> (list | None):
+		request = Pattern()
+		request.fields.extend(elem_to_value(elem) for elem in pattern)
+		response: OptionalTuple = await self.__actions_stub.Inp(request)
+		return [value_to_elem(value) for value in response.tuple.fields] if response.tuple else None
 
-		if response.status_code == requests.codes.server_error:
-			raise LindaDisposedException()
+	async def try_query(self, *pattern) -> (list | None):
+		request = Pattern()
+		request.fields.extend(elem_to_value(elem) for elem in pattern)
+		response: OptionalTuple = await self.__actions_stub.Rdp(request)
+		return [value_to_elem(value) for value in response.tuple.fields] if response.tuple else None
 
-		return response
+	async def register_script(self, key: str, ironpython_code: str) -> None:
+		request = RegisterScriptRequest(key=key, script=Script(type=Script.Type.IRONPYTHON, code=ironpython_code))
+		await self.__scripts_stub.Register(request)
 
-	def __wait_tuple(self, pattern: list, delete: bool) -> list:
-		method = "DELETE" if delete else "GET"
-		path = "in" if delete else "rd"
-		response = self.__send_json_request(method, path, pattern)
-		return response.json()
-
-	def __try_get_tuple(self, pattern: list, delete: bool) -> (list | None):
-		method = "DELETE" if delete else "GET"
-		path = "in" if delete else "rd"
-		response = self.__send_json_request(method, path, pattern)
-
-		if response.status_code == requests.codes.not_found:
-			return None
-
-		return response.json()
-
-	def put(self, *tuple) -> None:
-		self.__send_json_request("POST", "out", tuple)
-
-	def get(self, *pattern) -> list:
-		return self.__wait_tuple(pattern, True)
-
-	def query(self, *pattern) -> list:
-		return self.__wait_tuple(pattern, False)
-
-	def try_get(self, *pattern) -> (list | None):
-		return self.__try_get_tuple(pattern, True)
-
-	def try_query(self, *pattern) -> (list | None):
-		return self.__try_get_tuple(pattern, False)
-
-	def register_script(self, key: str, ironpython_code: str) -> None:
-		self.__send_text_request("PUT", f"eval/{key}", ironpython_code, "text/ironpython")
-
-	def register_script_file(self, key: str, ironpython_file_path: str) -> None:
+	async def register_script_file(self, key: str, ironpython_file_path: str) -> None:
 		with open(ironpython_file_path, "r") as file:
 			file_content = file.read()
 
-		self.eval_register(key, file_content)
+		await self.register_script(key, file_content)
 
-	def invoke_script(self, key: str, parameter: Any = None) -> None:
-		self.__send_json_request("POST", f"eval/{key}", parameter)
+	async def invoke_script(self, key: str, parameter: Any = None) -> int:
+		request = InvokeScriptRequest(key=key, parameter=elem_to_value(parameter))
+		response: EvalScriptResponse = await self.__scripts_stub.Invoke(request)
+		return response.task_id
 
-	def eval_script(self, ironpython_code: str) -> None:
-		self.__send_text_request("POST", "eval", ironpython_code, "text/ironpython")
+	async def eval_script(self, ironpython_code: str) -> int:
+		request = EvalScriptRequest(script=Script(type=Script.Type.IRONPYTHON, code=ironpython_code))
+		response: EvalScriptResponse = await self.__scripts_stub.Eval(request)
+		return response.task_id
 
-	def eval_script_file(self, ironpython_file_path: str) -> None:
+	async def eval_script_file(self, ironpython_file_path: str) -> int:
 		with open(ironpython_file_path, "r") as file:
 			file_content = file.read()
 
-		self.eval(file_content)
+		return await self.eval_script(file_content)
 
-	def is_healthy(self) -> bool:
-		url = self.__health_url + "ping"
-		
+	async def is_healthy(self) -> bool:
 		try:
-			response = requests.get(url, timeout=1)
-
-			return response.status_code % 100 == 2
+			response: StringValue = await self.__health_stub.Ping(Empty())
+			return response.value == "pong"
 		except:
 			return False
+
+if __name__ == "__main__":
+	async def main():
+		linda = RemoteLinda("localhost:5001")
+
+		while not await linda.is_healthy():
+			print("Waiting for server...")
+			await asyncio.sleep(1)
+
+		result = await linda.get("fib", 101, None)
+		print(result)
+
+	loop = asyncio.get_event_loop()
+	loop.run_until_complete(main())
+	loop.close()
