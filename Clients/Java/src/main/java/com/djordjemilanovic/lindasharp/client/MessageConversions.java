@@ -8,6 +8,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Map;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 class MessageConversions {
 	static Value elemToValue(Object elem) {
@@ -34,6 +35,29 @@ class MessageConversions {
 					.map(MessageConversions::elemToValue)
 					.collect(Collectors.toList())
 			));
+
+			case boolean[] booleans -> Value.newBuilder().setListValue(ListValue.newBuilder().addAllValues(
+				IntStream.range(0, booleans.length).mapToObj(i -> booleans[i]).map(b -> Value.newBuilder().setBoolValue(b).build()).collect(Collectors.toList())
+			));
+			case byte[] bytes -> Value.newBuilder().setListValue(ListValue.newBuilder().addAllValues(
+				IntStream.range(0, bytes.length).mapToObj(i -> bytes[i]).map(b -> Value.newBuilder().setNumberValue(b).build()).collect(Collectors.toList())
+			));
+			case short[] shorts -> Value.newBuilder().setListValue(ListValue.newBuilder().addAllValues(
+				IntStream.range(0, shorts.length).mapToObj(i -> shorts[i]).map(s -> Value.newBuilder().setNumberValue(s).build()).collect(Collectors.toList())
+			));
+			case int[] ints -> Value.newBuilder().setListValue(ListValue.newBuilder().addAllValues(
+				Arrays.stream(ints).mapToObj(i -> Value.newBuilder().setNumberValue(i).build()).collect(Collectors.toList())
+			));
+			case long[] longs -> Value.newBuilder().setListValue(ListValue.newBuilder().addAllValues(
+				Arrays.stream(longs).mapToObj(l -> Value.newBuilder().setNumberValue(l).build()).collect(Collectors.toList())
+			));
+			case float[] floats -> Value.newBuilder().setListValue(ListValue.newBuilder().addAllValues(
+				IntStream.range(0, floats.length).mapToObj(i -> floats[i]).map(f -> Value.newBuilder().setNumberValue(f).build()).collect(Collectors.toList())
+			));
+			case double[] doubles -> Value.newBuilder().setListValue(ListValue.newBuilder().addAllValues(
+				Arrays.stream(doubles).mapToObj(d -> Value.newBuilder().setNumberValue(d).build()).collect(Collectors.toList())
+			));
+
 			case Map<?, ?> map -> {
 				var struct = Struct.newBuilder();
 
