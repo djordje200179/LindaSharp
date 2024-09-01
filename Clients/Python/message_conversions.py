@@ -1,5 +1,8 @@
 from google.protobuf.internal.well_known_types import ListValue, Struct
 from google.protobuf.struct_pb2 import Value
+from linda import IScriptEvalLinda
+from scripts_pb2 import Script as GrpcScript
+from health_pb2 import ScriptExecutionStatus as GrpcScriptExecutionStatus
 
 def elem_to_value(elem):
 	match elem:
@@ -40,3 +43,23 @@ def value_to_elem(value: Value):
 		return None
 	else:
 		raise ValueError(f"Unsupported type {value}")
+
+
+def to_grpc_script(script: IScriptEvalLinda.Script) -> GrpcScript:
+	match script:
+		case IScriptEvalLinda.Script(IScriptEvalLinda.Script.Type.IRONPYTHON, code):
+			return GrpcScript(type=GrpcScript.Type.IRONPYTHON, code=code)
+		case IScriptEvalLinda.Script(IScriptEvalLinda.Script.Type.C_SHARP, code):
+			return GrpcScript(type=GrpcScript.Type.C_SHARP, code=code)
+		case _:
+			raise ValueError(f"Unsupported script type {script.type}")
+
+def from_grpc_script_execution_status(status: GrpcScriptExecutionStatus) -> GrpcScriptExecutionStatus:
+	if status.HasField("not_found"):
+		return IScriptEvalLinda.ScriptExecutionStatus.NOT_FOUND
+	elif status.HasField("ok"):
+		return IScriptEvalLinda.ScriptExecutionStatus.FINISHED
+	elif status.HasField("exception"):
+		grpc_extension = status.exception
+		#TODO: Set exception message
+		return IScriptEvalLinda.ScriptExecutionStatus.EXCEPTION

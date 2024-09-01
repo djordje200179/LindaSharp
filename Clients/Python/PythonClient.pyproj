@@ -26,6 +26,7 @@
     <Compile Include="actions_pb2_grpc.py" />
     <Compile Include="health_pb2.py" />
     <Compile Include="health_pb2_grpc.py" />
+    <Compile Include="linda.py" />
     <Compile Include="message_conversions.py" />
     <Compile Include="remote_linda.py" />
     <Compile Include="scripts_pb2.py" />

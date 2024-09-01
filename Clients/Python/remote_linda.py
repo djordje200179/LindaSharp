@@ -1,17 +1,17 @@
 import asyncio
-from google.protobuf.internal.well_known_types import Any
-from google.protobuf.wrappers_pb2 import StringValue
 import grpc
+from google.protobuf.wrappers_pb2 import Int32Value, StringValue
 from google.protobuf.empty_pb2 import Empty
 from actions_pb2 import OptionalTuple, Pattern, Tuple
-from health_pb2_grpc import HealthStub
 from actions_pb2_grpc import ActionsStub
-from message_conversions import elem_to_value, value_to_elem
-from scripts_pb2 import EvalScriptRequest, EvalScriptResponse, InvokeScriptRequest, RegisterScriptRequest, Script
+from linda import IScriptEvalLinda
+from scripts_pb2 import EvalScriptRequest, EvalScriptResponse, InvokeScriptRequest, RegisterScriptRequest
 from scripts_pb2_grpc import ScriptsStub
+from health_pb2_grpc import HealthStub
+from health_pb2 import ScriptExecutionStatus as GrpcScriptExecutionStatus
+from message_conversions import elem_to_value, from_grpc_script_execution_status, to_grpc_script, value_to_elem
 
-
-class RemoteLinda:
+class RemoteLinda(IScriptEvalLinda):
 	def __init__(self, target: str):
 		self.__channel = grpc.aio.insecure_channel(target)
 		self.__health_stub = HealthStub(self.__channel)
@@ -47,31 +47,19 @@ class RemoteLinda:
 		response: OptionalTuple = await self.__actions_stub.Rdp(request)
 		return [value_to_elem(value) for value in response.tuple.fields] if response.tuple else None
 
-	async def register_script(self, key: str, ironpython_code: str) -> None:
-		request = RegisterScriptRequest(key=key, script=Script(type=Script.Type.IRONPYTHON, code=ironpython_code))
+	async def register_script(self, key: str, script: IScriptEvalLinda.Script) -> None:
+		request = RegisterScriptRequest(key=key, script=to_grpc_script(script))
 		await self.__scripts_stub.Register(request)
 
-	async def register_script_file(self, key: str, ironpython_file_path: str) -> None:
-		with open(ironpython_file_path, "r") as file:
-			file_content = file.read()
-
-		await self.register_script(key, file_content)
-
-	async def invoke_script(self, key: str, parameter: Any = None) -> int:
+	async def invoke_script(self, key: str, parameter: any = None) -> int:
 		request = InvokeScriptRequest(key=key, parameter=elem_to_value(parameter))
 		response: EvalScriptResponse = await self.__scripts_stub.Invoke(request)
 		return response.task_id
 
-	async def eval_script(self, ironpython_code: str) -> int:
-		request = EvalScriptRequest(script=Script(type=Script.Type.IRONPYTHON, code=ironpython_code))
+	async def eval_script(self, script: IScriptEvalLinda.Script) -> int:
+		request = EvalScriptRequest(script=to_grpc_script(script))
 		response: EvalScriptResponse = await self.__scripts_stub.Eval(request)
 		return response.task_id
-
-	async def eval_script_file(self, ironpython_file_path: str) -> int:
-		with open(ironpython_file_path, "r") as file:
-			file_content = file.read()
-
-		return await self.eval_script(file_content)
 
 	async def is_healthy(self) -> bool:
 		try:
@@ -79,6 +67,11 @@ class RemoteLinda:
 			return response.value == "pong"
 		except:
 			return False
+
+	async def get_script_execution_status(self, id: int) -> IScriptEvalLinda.ScriptExecutionStatus:
+		request = Int32Value(value=id)
+		response: GrpcScriptExecutionStatus = await self.__scripts_stub.GetStatus(request)
+		return from_grpc_script_execution_status(response)
 
 if __name__ == "__main__":
 	async def main():
