@@ -16,16 +16,8 @@ class MessageConversions {
 			case null -> Value.newBuilder().setNullValue(NullValue.NULL_VALUE);
 			case Boolean b -> Value.newBuilder().setBoolValue(b);
 			case String str -> Value.newBuilder().setStringValue(str);
-
-			// TODO: Simplify
-			case Byte num -> Value.newBuilder().setNumberValue(num);
-			case Short num -> Value.newBuilder().setNumberValue(num);
-			case Integer num -> Value.newBuilder().setNumberValue(num);
-			case Long num -> Value.newBuilder().setNumberValue(num);
-			case Float num -> Value.newBuilder().setNumberValue(num);
-			case Double num -> Value.newBuilder().setNumberValue(num);
-			case BigInteger num -> Value.newBuilder().setNumberValue(num.doubleValue());
-			case BigDecimal num -> Value.newBuilder().setNumberValue(num.doubleValue());
+			case Number num -> Value.newBuilder().setNumberValue(num.doubleValue());
+			case Character c -> Value.newBuilder().setStringValue(c.toString());
 
 			case Collection<?> iterable -> Value.newBuilder().setListValue(ListValue.newBuilder().addAllValues(
 				iterable.stream().map(MessageConversions::elemToValue).collect(Collectors.toList())
@@ -37,7 +29,10 @@ class MessageConversions {
 			));
 
 			case boolean[] booleans -> Value.newBuilder().setListValue(ListValue.newBuilder().addAllValues(
-				IntStream.range(0, booleans.length).mapToObj(i -> booleans[i]).map(b -> Value.newBuilder().setBoolValue(b).build()).collect(Collectors.toList())
+					IntStream.range(0, booleans.length).mapToObj(i -> booleans[i]).map(b -> Value.newBuilder().setBoolValue(b).build()).collect(Collectors.toList())
+			));
+			case char[] chars -> Value.newBuilder().setListValue(ListValue.newBuilder().addAllValues(
+				IntStream.range(0, chars.length).mapToObj(i -> chars[i]).map(c -> Value.newBuilder().setStringValue(String.valueOf(c)).build()).collect(Collectors.toList())
 			));
 			case byte[] bytes -> Value.newBuilder().setListValue(ListValue.newBuilder().addAllValues(
 				IntStream.range(0, bytes.length).mapToObj(i -> bytes[i]).map(b -> Value.newBuilder().setNumberValue(b).build()).collect(Collectors.toList())
