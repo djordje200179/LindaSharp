@@ -5,9 +5,6 @@ using static LindaSharp.IScriptEvalLinda.ScriptExecutionStatus;
 namespace LindaSharp.ScriptEngine;
 
 public class ScriptEvalLinda(IActionEvalLinda linda) : IScriptEvalLinda {
-	private readonly ILinda localLinda = linda;
-	private readonly ScriptLocalLinda scriptLocalLinda = new(linda);
-
 	private readonly Dictionary<IScriptEvalLinda.Script.Language, IInterpreter> interpreters = new() {
 		{ IScriptEvalLinda.Script.Language.IronPython, new IronPythonInterpreter(linda) }
 	};
@@ -15,13 +12,13 @@ public class ScriptEvalLinda(IActionEvalLinda linda) : IScriptEvalLinda {
 	private readonly ConcurrentDictionary<string, IScriptEvalLinda.Script> evalScripts = new();
 	private readonly ConcurrentDictionary<int, Exception?> evalResults = new();
 
-	public Task Put(object[] tuple) => localLinda.Put(tuple);
+	public Task Put(object[] tuple) => linda.Put(tuple);
 
-	public Task<object[]> Get(object?[] pattern) => localLinda.Get(pattern);
-	public Task<object[]> Query(object?[] pattern) => localLinda.Get(pattern);
+	public Task<object[]> Get(object?[] pattern) => linda.Get(pattern);
+	public Task<object[]> Query(object?[] pattern) => linda.Get(pattern);
 
-	public Task<object[]?> TryGet(object?[] pattern) => localLinda.TryGet(pattern);
-	public Task<object[]?> TryQuery(object?[] pattern) => localLinda.TryQuery(pattern);
+	public Task<object[]?> TryGet(object?[] pattern) => linda.TryGet(pattern);
+	public Task<object[]?> TryQuery(object?[] pattern) => linda.TryQuery(pattern);
 
 	public Task RegisterScript(string key, IScriptEvalLinda.Script script) {
 		evalScripts[key] = script;
