@@ -81,12 +81,8 @@ internal static class MessageConversions {
 		return status.StatusCase switch {
 			GrpcScriptExecutionStatus.StatusOneofCase.NotFound => new ScriptExecutionStatus(ExecutionState.NotFound),
 			GrpcScriptExecutionStatus.StatusOneofCase.Ok => new ScriptExecutionStatus(ExecutionState.Finished),
-			GrpcScriptExecutionStatus.StatusOneofCase.Exception => new ScriptExecutionStatus(
-				ExecutionState.Exception,
-				new Exception(status.Exception.Message) {
-					Source = status.Exception.Source,
-					// TODO: Embed other fields
-				}),
+			GrpcScriptExecutionStatus.StatusOneofCase.Exception => 
+				new ScriptExecutionStatus(ExecutionState.Exception, new RemoteException(status.Exception)),
 			_ => throw new ArgumentException(nameof(status.StatusCase))
 		};
 	}

@@ -6,6 +6,7 @@
     <Nullable>enable</Nullable>
 	<TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <RootNamespace>LindaSharp.$(MSBuildProjectName.Replace(" ", "_"))</RootNamespace>
+    <AssemblyName>Client</AssemblyName>
   </PropertyGroup>
 
   <ItemGroup>
