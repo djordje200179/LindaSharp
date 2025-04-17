@@ -10,6 +10,12 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="FSharp\**" />
+    <EmbeddedResource Remove="FSharp\**" />
+    <None Remove="FSharp\**" />
+  </ItemGroup>
+
+  <ItemGroup>
     <None Remove="Protos\actions.proto" />
     <None Remove="Protos\health.proto" />
     <None Remove="Protos\scripts.proto" />

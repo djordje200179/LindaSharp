@@ -19,6 +19,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ScriptEngine", "ScriptEngin
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Common", "Common\Common.csproj", "{C3D96DD6-7F50-46AA-AD45-D2F2C86931BB}"
 EndProject
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "FSharp", "Clients\NET\FSharp\FSharp.fsproj", "{0A415487-64C2-4DD5-AAD4-79B407AB567E}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -51,6 +53,10 @@ Global
 		{C3D96DD6-7F50-46AA-AD45-D2F2C86931BB}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{C3D96DD6-7F50-46AA-AD45-D2F2C86931BB}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{C3D96DD6-7F50-46AA-AD45-D2F2C86931BB}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0A415487-64C2-4DD5-AAD4-79B407AB567E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0A415487-64C2-4DD5-AAD4-79B407AB567E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0A415487-64C2-4DD5-AAD4-79B407AB567E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0A415487-64C2-4DD5-AAD4-79B407AB567E}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -58,6 +64,7 @@ Global
 	GlobalSection(NestedProjects) = preSolution
 		{ED120ED5-4B07-4D63-8B51-DB5A6870E028} = {48835DB9-C792-4861-A505-B56435BD1FB3}
 		{4C75E0C6-1172-4BBF-99ED-B248DD3A705B} = {48835DB9-C792-4861-A505-B56435BD1FB3}
+		{0A415487-64C2-4DD5-AAD4-79B407AB567E} = {48835DB9-C792-4861-A505-B56435BD1FB3}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {E70D6D0E-E0F3-4ECC-AF7D-0A9B8434FAD0}
